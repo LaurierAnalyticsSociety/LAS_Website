@@ -12,7 +12,7 @@ export const navLinks = [
 
 
 export const aboutParagraphs = [
-'The Laurier Analytics Society (LAS) is Wilfrid Laurier University\'s official analytics club, the Laurier data club for WLU students. We support students through workshops, industry mentorship, a datathon, and a strong analytics-focused community.'];
+'The Laurier Analytics Society (LAS) is Wilfrid Laurier University\'s official analytics club. We create opportunities for students to develop real-world skills through workshops, industry mentorship, our annual datathon, and hands-on experiences, while fostering a community where students can connect, collaborate, and grow together.'];
 
 
 export const team = [
