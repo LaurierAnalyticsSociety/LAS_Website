@@ -84,7 +84,12 @@ export function Team() {
             onMouseLeave={() => setActive(null)}
             onFocus={() => setActive(member.name)}
             onBlur={() => setActive(null)}
-            className="group relative min-w-0 overflow-hidden bg-panel p-4 outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-cyan/70 sm:p-6">
+            
+            className={`group relative min-w-0 overflow-hidden bg-panel p-4 outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-cyan/70 sm:p-6 ${
+              i === 12
+                ? 'min-[380px]:col-span-2 min-[380px]:col-start-1 lg:col-span-1 lg:col-start-2'
+                : ''
+            }`}>
             
               <span className="pointer-events-none absolute inset-0 bg-cyan/[0.04] opacity-0 transition-opacity duration-500 group-hover:opacity-100" />
               <div className="relative overflow-hidden border border-paper/10 bg-ink/60 p-2 sm:p-4">
