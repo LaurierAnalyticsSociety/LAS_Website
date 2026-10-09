@@ -27,7 +27,8 @@ export const team = [
 { name: 'Rohan Gottipati', role: 'Executive', focus: '' },
 { name: 'Sophia Thai', role: 'Executive', focus: '' },
 { name: 'Tharan Harikrishnan', role: 'Executive', focus: '' },
-{ name: 'Yashika Sharma', role: 'Executive', focus: '' }];
+{ name: 'Yashika Sharma', role: 'Executive', focus: '' },
+{ name: 'Jason Noronha', role: 'Executive', focus: ''}];
 
 
 export const datathonYears = [
