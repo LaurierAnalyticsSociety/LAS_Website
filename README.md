@@ -53,7 +53,11 @@ variables in `.env` must be set for signups to work locally. See
 │   └── components/         # Page sections + UI primitives
 ├── supabase/
 │   └── functions/
-│       └── subscribe/      # Edge Function: store signup + send Resend email
+│       ├── subscribe/        # Edge Function: store signup + send Resend email
+│       ├── sponsor-inquiry/  # Edge Function: store inquiry + notify the LAS inbox
+│       └── unsubscribe/      # Edge Function: newsletter unsubscribe link target
+│   ├── migrations/           # Table schema (signup tables + sponsor_inquiries)
+│   └── config.toml           # Function settings (JWT verification off)
 └── ARCHITECTURE.md         # Structure and conventions
 ```
 
@@ -93,31 +97,70 @@ INSERT, never read):
 | `VITE_SUPABASE_PUBLISHABLE_KEY` | Browser | Publishable key — safe to expose; RLS limits it to INSERT |
 | `SUPABASE_SERVICE_ROLE_KEY` | Server only | **Never** commit or expose to the browser |
 | `RESEND_API_KEY` | Edge Function secret | Set on the function, not read from `.env` at runtime |
+| `RESEND_FROM` | Edge Function secret | Sender on a Resend-verified domain, e.g. `Laurier Analytics <hello@laurieranalytics.com>` |
+| `SPONSOR_NOTIFY_TO` | Edge Function secret | Inbox for sponsor inquiries: `laurieranalytics@gmail.com` |
+| `SITE_URL` | Edge Function secret | Optional. "Back to site" link on the unsubscribe page (defaults to `https://laurieranalytics.com`) |
 
-`.env` is gitignored. The Edge Function reads `SUPABASE_URL` and
-`SUPABASE_SERVICE_ROLE_KEY` automatically from the Supabase runtime;
-`RESEND_API_KEY` must be set as a function secret:
-
-```bash
-supabase secrets set RESEND_API_KEY=re_xxx --project-ref <project-ref>
-# or set it in Dashboard → Project Settings → Edge Functions
-```
-
-**Deploying the function**
+`.env` is gitignored. The Edge Functions read `SUPABASE_URL` and
+`SUPABASE_SERVICE_ROLE_KEY` automatically from the Supabase runtime; the rest
+must be set as function secrets:
 
 ```bash
-supabase functions deploy subscribe
+supabase secrets set --project-ref <project-ref> \
+  RESEND_API_KEY=re_xxx \
+  RESEND_FROM='Laurier Analytics <hello@laurieranalytics.com>' \
+  SPONSOR_NOTIFY_TO=laurieranalytics@gmail.com
+# or set them in Dashboard → Project Settings → Edge Functions
 ```
 
-> **Email deliverability:** until a domain is verified in Resend, mail is
-> sent from `onboarding@resend.dev` and only reliably delivers to the Resend
-> account owner (other addresses land in spam or don't arrive, but are still
-> stored). After verifying a domain, update `FROM_ADDRESS` in
-> `supabase/functions/subscribe/index.ts` and redeploy.
+**Deploying the functions**
 
-> **Note:** the table schema currently lives in the Supabase project, not as
-> a migration file in this repo. Run `supabase db pull` if you want it under
-> version control.
+```bash
+supabase functions deploy subscribe sponsor-inquiry unsubscribe --project-ref <project-ref>
+```
+
+`supabase/config.toml` turns off gateway JWT verification for all three
+functions. The site calls them with the publishable key (`sb_publishable_…`),
+which is not a JWT, and the unsubscribe link is opened straight from email.
+With verification on, every request fails with 401.
+
+> **Email deliverability:** without `RESEND_FROM`, mail is sent from
+> `onboarding@resend.dev` and only reliably delivers to the Resend account
+> owner (other addresses land in spam or don't arrive, but are still stored).
+> Verify `laurieranalytics.com` in Resend (Domains → add the DNS records it
+> lists), then set `RESEND_FROM` to an address on it.
+
+**Unsubscribe.** Every newsletter welcome email has an unsubscribe link and
+`List-Unsubscribe` headers pointing at the `unsubscribe` function, which sets
+the subscriber's `status` to `unsubscribed`. Signing up again reactivates
+the row.
+
+**Schema.** Tables are defined in `supabase/migrations/`. The migrations
+are idempotent, so they're safe to run against a project that already has
+the tables:
+
+```bash
+supabase link --project-ref <project-ref>
+supabase db push
+```
+
+### Restoring production (or moving to a new project)
+
+1. Create (or restore) the Supabase project and note its project ref.
+2. `supabase link --project-ref <ref>` then `supabase db push` to create the tables.
+   If you're moving data from an old project, export `newsletter_subscribers`,
+   `event_notifications` and `sponsor_inquiries` from it first and import them
+   into the new one.
+3. Set the function secrets above, then deploy all three functions.
+4. In Vercel, set `VITE_SUPABASE_URL` and `VITE_SUPABASE_PUBLISHABLE_KEY`
+   (Project Settings → API Keys) for Production, Preview and Development.
+5. Redeploy on Vercel. `VITE_` vars are baked in at build time, so changing
+   them does nothing until the next build.
+6. Check that `https://<ref>.supabase.co` resolves, then submit a test
+   newsletter signup and a test sponsor inquiry from the live site. Confirm the
+   rows are in the tables, the welcome email and its unsubscribe link work, and
+   the sponsor notification reaches the LAS inbox with Reply-To set to the
+   submitter.
 
 ## Design notes
 
