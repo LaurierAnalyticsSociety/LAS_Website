@@ -16,19 +16,15 @@ export const aboutParagraphs = [
 
 
 export const team = [
-{ name: 'Jana Nazer', role: 'Executive', focus: '' },
-{ name: 'Manatt Bhardwaj', role: 'Executive', focus: '' },
-{ name: 'David Zhao', role: 'Executive', focus: '' },
-{ name: 'Emaad Qazi', role: 'Executive', focus: '' },
-{ name: 'James Palaypayon', role: 'Executive', focus: '' },
-{ name: 'Kelly Tram', role: 'Executive', focus: '' },
-{ name: 'Mahnoor Ehsan', role: 'Executive', focus: '' },
-{ name: 'Rida Shahid', role: 'Executive', focus: '' },
-{ name: 'Rohan Gottipati', role: 'Executive', focus: '' },
-{ name: 'Sophia Thai', role: 'Executive', focus: '' },
-{ name: 'Tharan Harikrishnan', role: 'Executive', focus: '' },
-{ name: 'Yashika Sharma', role: 'Executive', focus: '' },
-{ name: 'Jason Noronha', role: 'Executive', focus: ''}];
+{ name: 'Jana Nazer', role: 'Co-President', focus: '', image: '/team/jana-nazer.jpg', imagePosition: 'center 55%' },
+{ name: 'Manatt Bhardwaj', role: 'Co-President', focus: '', image: '/team/manatt-bhardwaj.jpg' },
+{ name: 'Rida Shahid', role: 'Executive Vice-President', focus: '', image: '/team/rida-shahid.jpg' },
+{ name: 'David Zhao', role: 'VP of Technology', focus: '', image: '/team/david-zhao.jpg' },
+{ name: 'Rohan Gottipati', role: 'VP of Technology', focus: '', image: '/team/rohan-gottipati.jpg' },
+{ name: 'Emaad Qazi', role: 'VP of Events', focus: '', image: '/team/emaad-qazi.jpg' },
+{ name: 'Tharan Harikrishnan', role: 'VP of Finance', focus: '', image: '/team/tharan-harikrishnan.jpg' },
+{ name: 'Mahnoor Ehsan', role: 'VP of Marketing', focus: '', image: '/team/mahnoor-ehsan.jpg' },
+{ name: 'Kelly Tram', role: 'VP of Internal', focus: '', image: '/team/kelly-tram.jpg' }];
 
 
 export const datathonYears = [

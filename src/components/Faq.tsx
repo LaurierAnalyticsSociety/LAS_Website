@@ -15,15 +15,13 @@ export function Faq() {
           align="center"
           index="04 / FAQ"
           title="Questions we get *every September.*"
-          description="Still unsure? Send us a DM on Instagram. Someone from the exec team usually answers within a day." />
+          description="Still unsure? Send us an email at laurieranalytics@gmail.com. Someone from the exec team usually answers within a day." />
 
         <Reveal delay={0.18} className="mt-8 flex justify-center">
           <a
-            href="https://www.instagram.com/laurier_analytics"
-            target="_blank"
-            rel="noopener noreferrer"
+            href="mailto:laurieranalytics@gmail.com"
             className="btn-ghost">
-            Message @laurier_analytics
+            Email us
           </a>
         </Reveal>
 

@@ -1,118 +1,99 @@
-import React, { useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
+import { Database, KeyRound, Users } from 'lucide-react';
 import { SectionHeading } from './SectionHeading';
 import { team } from '../data/site';
-import { heatmap, rgbCss } from '../utils/heatmap';
-
-const CHARS = '.:-=+*#%@$&iIlZXU';
-const COLS = 16;
-const ROWS = 9;
-
-function AsciiPortrait({ seed, hovered }: {seed: string;hovered: boolean;}) {
-  const grid = useMemo(() => {
-    let h = hash(seed);
-    const cells: {ch: string;w: number;nx: number;ny: number;}[] = [];
-    for (let y = 0; y < ROWS; y++) {
-      for (let x = 0; x < COLS; x++) {
-        h = Math.imul(h, 1103515245) + 12345 >>> 0;
-        const r = h % 1000 / 1000;
-        const dx = (x - COLS / 2 + 0.5) / (COLS / 2);
-        const dy = (y - ROWS / 2 + 0.5) / (ROWS / 2);
-        const d = Math.sqrt(dx * dx + dy * dy);
-        const w = Math.max(0, 1 - d * 0.95) * (0.45 + r * 0.55);
-        cells.push({ ch: CHARS[Math.floor(r * CHARS.length)], w, nx: x / (COLS - 1), ny: y / (ROWS - 1) });
-      }
-    }
-    return cells;
-  }, [seed]);
-
-  return (
-    <div
-      aria-hidden="true"
-      className="grid select-none font-mono text-[11px] leading-[1.15] min-[380px]:text-[8px] sm:text-[11px]"
-      style={{ gridTemplateColumns: `repeat(${COLS}, minmax(0, 1fr))` }}>
-      
-      {grid.map((cell, i) => {
-        const t = hovered ? Math.min(1, cell.w * 1.55 + 0.12) : cell.w * 0.62;
-        return (
-          <span
-            key={i}
-            className="text-center transition-[color,opacity,transform] duration-300 ease-out"
-            style={{
-              color: rgbCss(heatmap(t, cell.nx, cell.ny)),
-              opacity: hovered ? Math.min(1, cell.w * 1.6 + 0.12) : cell.w * 0.55 + 0.08,
-              transform: hovered ? 'translateY(-1px)' : 'none'
-            }}>
-            
-            {cell.ch}
-          </span>);
-
-      })}
-    </div>);
-
-}
 
 export function Team() {
-  const [active, setActive] = useState<string | null>(null);
-
   return (
-    <section id="team" className="border-b border-paper/10 py-16 sm:py-32">
-      <div className="mx-auto max-w-[1400px] px-5 sm:px-8">
+    <section id="team" className="relative overflow-hidden border-b border-paper/10 py-16 sm:py-32">
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-0 opacity-[0.035]"
+        style={{
+          backgroundImage: 'linear-gradient(#5EEAD4 1px, transparent 1px), linear-gradient(90deg, #5EEAD4 1px, transparent 1px)',
+          backgroundSize: '40px 40px',
+          maskImage: 'linear-gradient(transparent, black 25%, black 85%, transparent)'
+        }}
+      />
+      <div className="relative mx-auto max-w-[1400px] px-5 sm:px-8">
         <SectionHeading
           align="center"
           index="03 / Our Team"
-          title="38 executives. *One team.*"
-          description="Meet the portfolio leads, the people who run the workshops, wrangle the sponsors, and stay up late cleaning the datathon datasets." />
-        
+          title={`${team.length} executives. *One team.*`}
+          description="Different portfolios. A shared purpose. Meet the people connecting the dots behind Laurier Analytics Society." />
+
         <div className="mt-8 flex justify-center">
           <a href="#faq" className="btn-ghost">
             How to join the exec team
           </a>
         </div>
 
-        <div className="mt-10 grid gap-px bg-paper/10 min-[380px]:grid-cols-2 sm:mt-14 lg:grid-cols-4">
-          {team.map((member, i) =>
-          <motion.article
-            key={member.name}
-            tabIndex={0}
-            data-cursor="decode"
-            initial={{ opacity: 0, y: 24 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, margin: '-70px' }}
-            transition={{ duration: 0.65, delay: i % 4 * 0.07, ease: [0.16, 1, 0.3, 1] }}
-            onMouseEnter={() => setActive(member.name)}
-            onMouseLeave={() => setActive(null)}
-            onFocus={() => setActive(member.name)}
-            onBlur={() => setActive(null)}
-            
-            className={`group relative min-w-0 overflow-hidden bg-panel p-4 outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-cyan/70 sm:p-6 ${
-              i === 12
-                ? 'min-[380px]:col-span-2 min-[380px]:col-start-1 lg:col-span-1 lg:col-start-2'
-                : ''
-            }`}>
-            
-              <span className="pointer-events-none absolute inset-0 bg-cyan/[0.04] opacity-0 transition-opacity duration-500 group-hover:opacity-100" />
-              <div className="relative overflow-hidden border border-paper/10 bg-ink/60 p-2 sm:p-4">
-                <AsciiPortrait seed={member.name} hovered={active === member.name} />
-              </div>
-              <h3 className="relative mt-4 font-display text-[1.35rem] leading-tight text-paper sm:mt-5 sm:text-2xl">{member.name}</h3>
-              <p className="relative mt-2 break-words font-mono text-[10px] uppercase tracking-[0.12em] text-cyan/80 sm:mt-1 sm:text-[11px] sm:tracking-[0.18em]">{member.role}</p>
-              {member.focus ?
-              <p className="relative mt-2 text-[12px] leading-snug text-paper/45 sm:text-[13px]">{member.focus}</p> :
-              null}
-            </motion.article>
-          )}
+        <div className="mt-10 overflow-hidden rounded-sm border border-cyan/20 bg-ink sm:mt-14">
+          <div className="flex flex-wrap items-center justify-between gap-4 border-b border-cyan/20 bg-cyan/[0.04] px-4 py-4 sm:px-6">
+            <div className="flex items-center gap-3">
+              <Database aria-hidden="true" className="h-4 w-4 text-cyan" />
+              <span className="font-mono text-xs text-paper sm:text-sm">
+                <span className="text-paper/40">las / </span>executive_team
+              </span>
+            </div>
+            <div className="flex items-center gap-2 font-mono text-[10px] uppercase tracking-[0.14em] text-cyan/80">
+              <Users aria-hidden="true" className="h-3.5 w-3.5" />
+              {team.length} people · one team
+            </div>
+          </div>
+
+          <div className="grid gap-px bg-cyan/15 min-[380px]:grid-cols-2 lg:grid-cols-3">
+            {team.map((member, i) => (
+              <motion.article
+                key={member.name}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, margin: '-40px' }}
+                transition={{ duration: 0.5, delay: i % 3 * 0.06 }}
+                className="group relative min-w-0 bg-panel transition-colors duration-300 hover:bg-lift"
+              >
+                <div className="flex items-center justify-between border-b border-paper/10 px-4 py-3 font-mono text-[10px] sm:px-5">
+                  <span className="flex items-center gap-2 text-cyan/80">
+                    <KeyRound aria-hidden="true" className="h-3 w-3" />
+                    <span className="sr-only">Member ID: </span>LAS_{String(i + 1).padStart(3, '0')}
+                  </span>
+                  <span aria-hidden="true" className="text-paper/30">{String(i + 1).padStart(2, '0')} / {String(team.length).padStart(2, '0')}</span>
+                </div>
+
+                <div className="p-3 sm:p-5">
+                  <div className="relative aspect-square overflow-hidden border border-paper/10 bg-ink">
+                    <img
+                      src={member.image}
+                      alt={`Portrait of ${member.name}`}
+                      loading="lazy"
+                      width={800}
+                      height={800}
+                      className="h-full w-full object-cover"
+                      style={{ objectPosition: member.imagePosition ?? 'top' }}
+                    />
+                    <span aria-hidden="true" className="pointer-events-none absolute left-0 top-0 h-4 w-4 border-l border-t border-cyan" />
+                    <span aria-hidden="true" className="pointer-events-none absolute bottom-0 right-0 h-4 w-4 border-b border-r border-cyan" />
+                  </div>
+
+                  <div className="mt-5">
+                    <span className="font-mono text-[9px] uppercase tracking-[0.2em] text-paper/40">name</span>
+                    <h3 className="mt-1 font-heading text-lg font-medium leading-tight tracking-tight text-paper sm:text-2xl">{member.name}</h3>
+                  </div>
+                  <dl className="mt-4 border-t border-paper/10 pt-3">
+                    <dt className="font-mono text-[9px] uppercase tracking-[0.2em] text-paper/40">role</dt>
+                    <dd className="mt-1.5 break-words font-mono text-[11px] leading-relaxed text-cyan sm:text-xs">{member.role}</dd>
+                  </dl>
+                </div>
+              </motion.article>
+            ))}
+          </div>
+
+          <div className="flex flex-wrap items-center justify-between gap-2 border-t border-cyan/20 px-4 py-3 font-mono text-[9px] text-paper/40 sm:px-6 sm:text-[10px]">
+            <span>Laurier Analytics Society</span>
+            <span>{team.length} records / executive team</span>
+          </div>
         </div>
       </div>
-    </section>);
-
-}
-
-function hash(str: string) {
-  let h = 2166136261;
-  for (let i = 0; i < str.length; i++) {
-    h ^= str.charCodeAt(i);
-    h = Math.imul(h, 16777619);
-  }
-  return h >>> 0;
+    </section>
+  );
 }
