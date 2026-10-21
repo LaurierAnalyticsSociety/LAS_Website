@@ -6,6 +6,10 @@
 // (e.g. no verified domain yet, so only the account owner can receive mail),
 // the subscriber is still saved and the request still succeeds.
 //
+// Newsletter welcome emails carry an unsubscribe link (and List-Unsubscribe
+// headers) pointing at the `unsubscribe` function. Signing up again after
+// unsubscribing reactivates the row and is treated as a new signup.
+//
 // Request:  POST { email, type?: 'newsletter' | 'event', event_key?, source? }
 // Response: { ok, stored, already_subscribed, email_sent }
 
@@ -15,10 +19,10 @@ const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
 const SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
 const RESEND_API_KEY = Deno.env.get('RESEND_API_KEY');
 
-// Until a domain is verified in Resend, this can only deliver to the Resend
-// account owner's email. Swap in your own verified domain later, e.g.
-// 'Laurier Analytics <hello@yourdomain.ca>'.
-const FROM_ADDRESS = 'Laurier Analytics <onboarding@resend.dev>';
+// Set RESEND_FROM to an address on a domain verified in Resend, e.g.
+// 'Laurier Analytics <hello@laurieranalytics.com>'. The resend.dev fallback can
+// only deliver to the Resend account owner's email.
+const FROM_ADDRESS = Deno.env.get('RESEND_FROM') ?? 'Laurier Analytics <onboarding@resend.dev>';
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const UNIQUE_VIOLATION = '23505';
@@ -39,9 +43,18 @@ function json(body: unknown, status = 200): Response {
 interface WelcomeCopy {
   subject: string;
   html: string;
+  unsubscribeUrl?: string;
 }
 
-function welcomeCopy(type: 'newsletter' | 'event', eventKey: string | null): WelcomeCopy {
+function unsubscribeUrl(token: string): string {
+  return `${SUPABASE_URL}/functions/v1/unsubscribe?token=${encodeURIComponent(token)}`;
+}
+
+function welcomeCopy(
+  type: 'newsletter' | 'event',
+  eventKey: string | null,
+  unsubscribeToken: string | null,
+): WelcomeCopy {
   if (type === 'event') {
     return {
       subject: "You're on the list. We'll let you know",
@@ -56,8 +69,10 @@ function welcomeCopy(type: 'newsletter' | 'event', eventKey: string | null): Wel
         </div>`,
     };
   }
+  const unsubUrl = unsubscribeToken ? unsubscribeUrl(unsubscribeToken) : undefined;
   return {
     subject: "You're subscribed: the signal, minus the noise",
+    unsubscribeUrl: unsubUrl,
     html: `
       <div style="font-family: -apple-system, Segoe UI, Roboto, sans-serif; max-width: 480px; margin: 0 auto; color: #0f172a;">
         <h1 style="font-size: 20px;">You're on the list.</h1>
@@ -66,6 +81,11 @@ function welcomeCopy(type: 'newsletter' | 'event', eventKey: string | null): Wel
           postings, and one chart worth your attention. That's it.
         </p>
         <p style="font-size: 13px; color: #64748b;">Laurier Analytics &amp; Statistics</p>
+        ${
+          unsubUrl
+            ? `<p style="font-size: 12px; color: #94a3b8;">Not for you? <a href="${unsubUrl}" style="color: #64748b;">Unsubscribe</a>.</p>`
+            : ''
+        }
       </div>`,
   };
 }
@@ -82,7 +102,19 @@ async function sendWelcomeEmail(
         Authorization: `Bearer ${RESEND_API_KEY}`,
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ from: FROM_ADDRESS, to: [to], subject: copy.subject, html: copy.html }),
+      body: JSON.stringify({
+        from: FROM_ADDRESS,
+        to: [to],
+        subject: copy.subject,
+        html: copy.html,
+        // RFC 8058 one-click unsubscribe: mail clients POST to this URL.
+        ...(copy.unsubscribeUrl && {
+          headers: {
+            'List-Unsubscribe': `<${copy.unsubscribeUrl}>`,
+            'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click',
+          },
+        }),
+      }),
     });
     if (res.ok) return { sent: true };
     return { sent: false, error: `Resend ${res.status}: ${await res.text()}` };
@@ -118,23 +150,46 @@ Deno.serve(async (req) => {
     auth: { persistSession: false },
   });
 
-  const insert =
-    type === 'event'
-      ? supabase.from('event_notifications').insert({ email, event_key: eventKey, source })
-      : supabase.from('newsletter_subscribers').insert({ email, source });
+  let unsubscribeToken: string | null = null;
+  let error: { code?: string } | null;
+  if (type === 'event') {
+    ({ error } = await supabase.from('event_notifications').insert({ email, event_key: eventKey, source }));
+  } else {
+    const result = await supabase
+      .from('newsletter_subscribers')
+      .insert({ email, source })
+      .select('unsubscribe_token')
+      .single();
+    error = result.error;
+    unsubscribeToken = result.data?.unsubscribe_token ?? null;
+  }
 
-  const { error } = await insert;
-
-  const alreadySubscribed = error?.code === UNIQUE_VIOLATION;
+  let alreadySubscribed = error?.code === UNIQUE_VIOLATION;
   if (error && !alreadySubscribed) {
     console.error('DB insert error:', error);
     return json({ ok: false, error: 'Could not save your signup. Please try again.' }, 500);
   }
 
+  // Someone who unsubscribed and signs up again is reactivated, not ignored.
+  if (alreadySubscribed && type === 'newsletter') {
+    const { data, error: reactivateError } = await supabase
+      .from('newsletter_subscribers')
+      .update({ status: 'subscribed', unsubscribed_at: null })
+      .eq('email', email)
+      .eq('status', 'unsubscribed')
+      .select('unsubscribe_token');
+    if (reactivateError) {
+      console.error('DB reactivate error:', reactivateError);
+    } else if (data && data.length > 0) {
+      alreadySubscribed = false;
+      unsubscribeToken = data[0].unsubscribe_token ?? null;
+    }
+  }
+
   // Only send a welcome email on a genuinely new signup.
   let emailSent = false;
   if (!alreadySubscribed) {
-    const result = await sendWelcomeEmail(email, welcomeCopy(type, eventKey));
+    const result = await sendWelcomeEmail(email, welcomeCopy(type, eventKey, unsubscribeToken));
     emailSent = result.sent;
     if (!result.sent) console.warn('Welcome email not sent:', result.error);
   }
