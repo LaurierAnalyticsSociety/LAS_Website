@@ -1,86 +1,129 @@
 <!doctype html>
-<html lang="en">
+<html lang="en-CA" class="dark">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-    <!--
-      SEO NOTE: the production domain is a placeholder until the site is deployed.
-      Find-and-replace https://laurieranalytics.com with the real domain across
-      this file, public/robots.txt and public/sitemap.xml when it's known.
-    -->
-    <link rel="canonical" href="https://laurieranalytics.com/" />
-
-    <title>Laurier Analytics Society (LAS) - Data & Analytics Club at WLU</title>
+    <title>Laurier Analytics Society (LAS) | Data &amp; Analytics Club at Wilfrid Laurier University</title>
     <meta
       name="description"
-      content="Laurier Analytics Society (LAS): Wilfrid Laurier University's student-run data &amp; analytics community offering workshops, mentorship, speaker nights, and the annual LAS Datathon. Every major welcome." />
-    <meta name="robots" content="index, follow, max-image-preview:large" />
+      content="The Laurier Analytics Society (LAS) is Wilfrid Laurier University's student-run data and analytics club in Waterloo, Ontario. Join workshops, industry mentorship, speaker nights and the annual LAS Datathon. Every program welcome." />
+    <link rel="canonical" href="https://laurieranalytics.com/" />
+    <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
     <meta name="author" content="Laurier Analytics Society" />
     <meta name="theme-color" content="#070b0d" />
+    <meta name="color-scheme" content="dark" />
+    <meta name="format-detection" content="telephone=no" />
 
-    <!-- Speed up webfont delivery (fonts are @imported from Google Fonts in CSS). -->
+    <!-- Fonts are @imported from Google Fonts in src/index.css; preconnect and
+         preload so they start downloading before the stylesheet is parsed. -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&display=swap" />
+    <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Geist:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap" />
+    <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Geist+Mono:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap" />
 
     <!-- Icons -->
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <link rel="apple-touch-icon" href="/favicon.svg" />
+    <link rel="icon" type="image/png" sizes="48x48" href="/favicon-48.png" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
     <link rel="manifest" href="/site.webmanifest" />
 
     <!-- Open Graph -->
     <meta property="og:type" content="website" />
     <meta property="og:site_name" content="Laurier Analytics Society" />
-    <meta property="og:title" content="Laurier Analytics Society (LAS) - Data & Analytics Club at WLU" />
+    <meta property="og:title" content="Laurier Analytics Society (LAS) | Data &amp; Analytics Club at Wilfrid Laurier University" />
     <meta
       property="og:description"
-      content="Wilfrid Laurier University's student-run data &amp; analytics community offering workshops, mentorship, speaker nights, and the annual LAS Datathon. Every major welcome." />
+      content="Wilfrid Laurier University's student-run data and analytics club. Workshops, industry mentorship, speaker nights and the annual LAS Datathon. Every program welcome." />
     <meta property="og:url" content="https://laurieranalytics.com/" />
-    <meta property="og:image" content="https://laurieranalytics.com/data-minds-challenge.jpg" />
-    <meta property="og:image:alt" content="Laurier Analytics Society members at the LAS Datathon." />
+    <meta property="og:image" content="https://laurieranalytics.com/og-image.jpg" />
+    <meta property="og:image:type" content="image/jpeg" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="Laurier Analytics Society members at The Data Minds Challenge datathon." />
     <meta property="og:locale" content="en_CA" />
 
-    <!-- Twitter -->
+    <!-- Twitter / X -->
     <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:title" content="Laurier Analytics Society (LAS) - Data & Analytics Club at WLU" />
+    <meta name="twitter:title" content="Laurier Analytics Society (LAS) | Data &amp; Analytics Club at Wilfrid Laurier University" />
     <meta
       name="twitter:description"
-      content="Wilfrid Laurier University's student-run data &amp; analytics community offering workshops, mentorship, and the annual LAS Datathon." />
-    <meta name="twitter:image" content="https://laurieranalytics.com/data-minds-challenge.jpg" />
-    <meta name="twitter:image:alt" content="Laurier Analytics Society members at the LAS Datathon." />
+      content="Wilfrid Laurier University's student-run data and analytics club. Workshops, industry mentorship and the annual LAS Datathon." />
+    <meta name="twitter:image" content="https://laurieranalytics.com/og-image.jpg" />
+    <meta name="twitter:image:alt" content="Laurier Analytics Society members at The Data Minds Challenge datathon." />
 
-    <!-- Structured data: the organization and the site. -->
+    <!-- Structured data. FAQPage JSON-LD is generated from src/data/site.ts at
+         build time by scripts/prerender.mjs. -->
     <script type="application/ld+json">
       {
         "@context": "https://schema.org",
-        "@type": "EducationalOrganization",
-        "name": "Laurier Analytics Society",
-        "alternateName": "LAS",
-        "url": "https://laurieranalytics.com/",
-        "logo": "https://laurieranalytics.com/favicon.svg",
-        "description": "Wilfrid Laurier University's student-run data and analytics community offering workshops, industry mentorship, speaker nights, and the annual LAS Datathon.",
-        "foundingDate": "2021",
-        "parentOrganization": {
-          "@type": "CollegeOrUniversity",
-          "name": "Wilfrid Laurier University"
-        },
-        "sameAs": [
-          "https://www.instagram.com/laurier_analytics",
-          "https://www.linkedin.com/company/laurier-analytics-society-las"
+        "@graph": [
+          {
+            "@type": ["EducationalOrganization", "StudentOrganization"],
+            "@id": "https://laurieranalytics.com/#organization",
+            "name": "Laurier Analytics Society",
+            "alternateName": ["LAS", "Laurier Analytics"],
+            "url": "https://laurieranalytics.com/",
+            "logo": {
+              "@type": "ImageObject",
+              "url": "https://laurieranalytics.com/icon-512.png",
+              "width": 512,
+              "height": 512
+            },
+            "image": "https://laurieranalytics.com/og-image.jpg",
+            "description": "Wilfrid Laurier University's student-run data and analytics club offering workshops, industry mentorship, speaker nights, and the annual LAS Datathon.",
+            "email": "laurieranalytics@gmail.com",
+            "foundingDate": "2021",
+            "address": {
+              "@type": "PostalAddress",
+              "addressLocality": "Waterloo",
+              "addressRegion": "ON",
+              "addressCountry": "CA"
+            },
+            "areaServed": "Waterloo, Ontario",
+            "knowsAbout": ["Data analytics", "Data science", "Python", "SQL", "Business analytics", "Datathons"],
+            "parentOrganization": {
+              "@type": "CollegeOrUniversity",
+              "name": "Wilfrid Laurier University",
+              "url": "https://www.wlu.ca/"
+            },
+            "sameAs": [
+              "https://www.instagram.com/laurier_analytics",
+              "https://www.linkedin.com/company/laurier-analytics-society-las"
+            ]
+          },
+          {
+            "@type": "WebSite",
+            "@id": "https://laurieranalytics.com/#website",
+            "name": "Laurier Analytics Society",
+            "alternateName": "LAS",
+            "url": "https://laurieranalytics.com/",
+            "inLanguage": "en-CA",
+            "publisher": { "@id": "https://laurieranalytics.com/#organization" }
+          },
+          {
+            "@type": "WebPage",
+            "@id": "https://laurieranalytics.com/#webpage",
+            "url": "https://laurieranalytics.com/",
+            "name": "Laurier Analytics Society (LAS) | Data & Analytics Club at Wilfrid Laurier University",
+            "isPartOf": { "@id": "https://laurieranalytics.com/#website" },
+            "about": { "@id": "https://laurieranalytics.com/#organization" },
+            "primaryImageOfPage": "https://laurieranalytics.com/og-image.jpg",
+            "inLanguage": "en-CA"
+          }
         ]
-      }
-    </script>
-    <script type="application/ld+json">
-      {
-        "@context": "https://schema.org",
-        "@type": "WebSite",
-        "name": "Laurier Analytics Society",
-        "url": "https://laurieranalytics.com/"
       }
     </script>
   </head>
   <body>
     <div id="root"></div>
+    <noscript>
+      <p style="padding: 1rem; color: #e5e7eb; background: #070b0d">
+        The Laurier Analytics Society website works best with JavaScript enabled. Email us at
+        <a href="mailto:laurieranalytics@gmail.com" style="color: #5eead4">laurieranalytics@gmail.com</a>.
+      </p>
+    </noscript>
     <script type="module" src="/src/index.tsx"></script>
   </body>
 </html>

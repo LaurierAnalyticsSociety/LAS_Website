@@ -64,9 +64,9 @@ export function Preloader({ onDone }: PreloaderProps) {
             <div className="h-16 w-36 sm:h-20 sm:w-[180px]">
               <LogoMark draw />
             </div>
-            <h2 className="mt-8 text-center font-display text-5xl leading-[0.95] tracking-tight sm:text-7xl">
+            <p aria-hidden="true" className="mt-8 text-center font-display text-5xl leading-[0.95] tracking-tight sm:text-7xl">
               <WordReveal text="Laurier Analytics *Society*" delay={0.35} immediate />
-            </h2>
+            </p>
 
             <div className="mt-12 w-full max-w-sm">
               <div className="h-px w-full bg-paper/10">

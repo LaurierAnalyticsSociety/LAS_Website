@@ -35,7 +35,7 @@ The newsletter and sponsor forms call Supabase Edge Functions, so the two
 | Script | Purpose |
 |--------|---------|
 | `npm run dev` | Local development server |
-| `npm run build` | Production build → `dist/` |
+| `npm run build` | Production build → `dist/` (client bundle + prerendered HTML) |
 | `npm run preview` | Serve the production build locally |
 | `npm run lint` | ESLint |
 
@@ -82,9 +82,31 @@ The production site is deployed to **Vercel** and served at
 Edge Functions are deployed separately to Supabase (see below); a Vercel
 deploy does not update them.
 
-SEO files reference the production domain. If the domain ever changes, update
-the canonical / Open Graph / JSON-LD URLs in `index.html`, plus
-`public/robots.txt` and `public/sitemap.xml`.
+`vercel.json` sets long-lived caching for hashed `/assets/*` files and a
+one-week cache for images.
+
+## SEO
+
+- **Prerendering:** `npm run build` also builds `src/entry-server.tsx` for
+  SSR and runs `scripts/prerender.mjs`, which renders the page into
+  `dist/index.html` so crawlers and link-preview bots see the full content
+  without running JavaScript. The client then re-renders with `createRoot`
+  (not hydration), so components don't need to produce identical server and
+  client markup, but anything run during render must not touch `window` /
+  `document` (keep that in effects).
+- **Structured data:** Organization / WebSite / WebPage JSON-LD lives in
+  `index.html`; the FAQPage JSON-LD is generated from `faqs` in
+  `src/data/site.ts` at build time.
+- **Metadata & assets:** title, description, canonical, Open Graph and Twitter
+  tags are in `index.html`. The social preview image is `public/og-image.jpg`
+  (1200×630). Icons: `favicon.svg`, `favicon-48.png`, `apple-touch-icon.png`,
+  `icon-192.png`, `icon-512.png`.
+- **Sitemap:** `public/sitemap.xml` (with image entries); `lastmod` is stamped
+  with the build date.
+- **Domain:** if the domain ever changes, update the URLs in `index.html`,
+  `public/robots.txt` and `public/sitemap.xml`.
+- After deploying, submit the sitemap in Google Search Console and Bing
+  Webmaster Tools.
 
 ## Backend (Supabase)
 

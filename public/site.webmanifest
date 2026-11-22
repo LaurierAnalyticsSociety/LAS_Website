@@ -1,17 +1,16 @@
 {
   "name": "Laurier Analytics Society",
   "short_name": "LAS",
-  "description": "Wilfrid Laurier University's student-run data & analytics community.",
+  "description": "Wilfrid Laurier University's student-run data & analytics club.",
+  "lang": "en-CA",
   "start_url": "/",
+  "scope": "/",
   "display": "standalone",
   "background_color": "#070b0d",
   "theme_color": "#070b0d",
   "icons": [
-    {
-      "src": "/favicon.svg",
-      "sizes": "any",
-      "type": "image/svg+xml",
-      "purpose": "any"
-    }
+    { "src": "/favicon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" },
+    { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" }
   ]
 }
