@@ -96,6 +96,11 @@ one-week cache for images.
   (not hydration), so components don't need to produce identical server and
   client markup, but anything run during render must not touch `window` /
   `document` (keep that in effects).
+- **No-JS / reduced motion:** the prerendered HTML starts with the intro
+  overlay (`data-preloader`) and reveal animations at their hidden start
+  state. Inline CSS in `index.html` hides the overlay for
+  `prefers-reduced-motion` visitors, and a `<noscript>` style hides it and
+  shows all content (including FAQ answers) when JavaScript is off.
 - **Structured data:** Organization / WebSite / WebPage JSON-LD lives in
   `index.html`; the FAQPage JSON-LD is generated from `faqs` in
   `src/data/site.ts` at build time.
@@ -103,8 +108,9 @@ one-week cache for images.
   tags are in `index.html`. The social preview image is `public/og-image.jpg`
   (1200×630). Icons: `favicon.svg`, `favicon-48.png`, `apple-touch-icon.png`,
   `icon-192.png`, `icon-512.png`.
-- **Sitemap:** `public/sitemap.xml` (with image entries); `lastmod` is stamped
-  with the build date.
+- **Sitemap:** `public/sitemap.xml` (with image entries). `lastmod` is
+  maintained by hand: bump it only when page content actually changes, so
+  search engines keep trusting it.
 - **Domain:** if the domain ever changes, update the URLs in `index.html`,
   `public/robots.txt` and `public/sitemap.xml`.
 - After deploying, submit the sitemap in Google Search Console and Bing
@@ -233,7 +239,7 @@ supabase db push
 
 - Generated from a [Magic Patterns](https://www.magicpatterns.com/c/2a21qyqaumtbpafpn3qfba) design, then adapted for LAS.
 - Dark theme is forced on `<html>` via `document.documentElement.classList.add('dark')` in `App`.
-- FAQ structured data (JSON-LD) is generated at runtime from `faqs` in `site.ts`, so it always matches the visible FAQ.
+- The page title is static in `index.html`. FAQ structured data (JSON-LD) is generated at build time from `faqs` in `site.ts` by `scripts/prerender.mjs`, so it always matches the visible FAQ.
 - Optional `App` props: `asciiDensity` (`'fine' | 'standard' | 'bold'`), `showIntro` (preloader, boolean), and `customCursor` (boolean). The intro is skipped when the user prefers reduced motion.
 
 ## License
