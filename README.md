@@ -131,9 +131,12 @@ With verification on, every request fails with 401.
 > lists), then set `RESEND_FROM` to an address on it.
 
 **Unsubscribe.** Every newsletter welcome email has an unsubscribe link and
-`List-Unsubscribe` headers pointing at the `unsubscribe` function, which sets
-the subscriber's `status` to `unsubscribed`. Signing up again reactivates
-the row.
+`List-Unsubscribe` / `List-Unsubscribe-Post` headers pointing at the
+`unsubscribe` function. Opening the link (GET) only shows a confirm page,
+because mail security scanners prefetch links; the subscriber's `status` is
+set to `unsubscribed` only on POST, either from that page's button or from an
+RFC 8058 one-click request sent by the mail client (Gmail, Yahoo, etc.).
+Signing up again reactivates the row.
 
 **Schema.** Tables are defined in `supabase/migrations/`. The migrations
 are idempotent, so they're safe to run against a project that already has

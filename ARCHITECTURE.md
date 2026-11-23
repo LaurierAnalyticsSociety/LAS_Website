@@ -57,9 +57,13 @@ keeps the service-role key and the Resend key server-side.
    write is authoritative** — a failed email send does not fail the request.
    The response's `email_sent` flag tells the UI whether to say a
    confirmation went out.
-4. Newsletter emails link to the `unsubscribe` function, which looks the
-   subscriber up by `unsubscribe_token` and sets `status = 'unsubscribed'`.
-   A later signup with the same email reactivates the row.
+4. Newsletter emails link to the `unsubscribe` function. GET is read-only:
+   it validates the token (a UUID) and renders a confirm page whose form
+   POSTs back to the same URL, so link-scanning bots can't unsubscribe
+   anyone. POST sets `status = 'unsubscribed'`; a `List-Unsubscribe=One-Click`
+   body (RFC 8058, from the mail client) gets an empty 200, the browser form
+   gets the "unsubscribed" page. A later signup with the same email
+   reactivates the row.
 
 **Data model** (RLS enabled; the public `anon`/publishable key may only
 INSERT, never SELECT — emails are never readable through the Data API):
