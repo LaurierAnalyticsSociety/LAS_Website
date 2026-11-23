@@ -15,16 +15,37 @@ export const aboutParagraphs = [
 'The Laurier Analytics Society (LAS) is Wilfrid Laurier University\'s official analytics club. We create opportunities for students to develop real-world skills through workshops, industry mentorship, our annual datathon, and hands-on experiences, while fostering a community where students can connect, collaborate, and grow together.'];
 
 
-export const team = [
-{ name: 'Jana Nazer', role: 'Co-President', focus: '', image: '/team/jana-nazer.jpg', imagePosition: 'center 55%' },
-{ name: 'Manatt Bhardwaj', role: 'Co-President', focus: '', image: '/team/manatt-bhardwaj.jpg' },
-{ name: 'Rida Shahid', role: 'Executive Vice-President', focus: '', image: '/team/rida-shahid.jpg' },
-{ name: 'David Zhao', role: 'VP of Technology', focus: '', image: '/team/david-zhao.jpg' },
-{ name: 'Rohan Gottipati', role: 'VP of Technology', focus: '', image: '/team/rohan-gottipati.jpg' },
-{ name: 'Emaad Qazi', role: 'VP of Events', focus: '', image: '/team/emaad-qazi.jpg' },
-{ name: 'Tharan Harikrishnan', role: 'VP of Finance', focus: '', image: '/team/tharan-harikrishnan.jpg' },
-{ name: 'Mahnoor Ehsan', role: 'VP of Marketing', focus: '', image: '/team/mahnoor-ehsan.jpg' },
-{ name: 'Kelly Tram', role: 'VP of Internal', focus: '', image: '/team/kelly-tram.jpg' }];
+export interface TeamMember {
+  name: string;
+  role: string;
+  image: string;
+  imagePosition?: string;
+  linkedin: string;
+  github?: string;
+}
+
+// linkedin: full profile URL ('' hides the icon). github: optional, omit if none.
+export const team: TeamMember[] = [
+{ name: 'Jana Nazer', role: 'Co-President', image: '/team/jana-nazer.jpg', imagePosition: 'center 55%', linkedin: '' },
+{ name: 'Manatt Bhardwaj', role: 'Co-President', image: '/team/manatt-bhardwaj.jpg', linkedin: '' },
+{ name: 'Rida Shahid', role: 'Executive Vice-President', image: '/team/rida-shahid.jpg', linkedin: '' },
+{ name: 'David Zhao', role: 'VP of Technology', image: '/team/david-zhao.jpg', linkedin: 'https://www.linkedin.com/in/david-zhao-0524dz', github: 'https://github.com/zhao0524' },
+{ name: 'Rohan Gottipati', role: 'VP of Technology', image: '/team/rohan-gottipati.jpg', linkedin: '' },
+{ name: 'Emaad Qazi', role: 'VP of Events', image: '/team/emaad-qazi.jpg', linkedin: 'https://www.linkedin.com/in/emaadqazi', github: 'https://github.com/emaadqazi' },
+{ name: 'Tharan Harikrishnan', role: 'VP of Finance', image: '/team/tharan-harikrishnan.jpg', linkedin: '' },
+{ name: 'Mahnoor Ehsan', role: 'VP of Marketing', image: '/team/mahnoor-ehsan.jpg', linkedin: '' },
+{ name: 'Kelly Tram', role: 'VP of Internal', image: '/team/kelly-tram.jpg', linkedin: '' },
+{ name: 'Jason Noronha', role: 'Director of Technology', image: '/team/jason-noronha.jpg', linkedin: 'https://www.linkedin.com/in/jasonivannoronha' },
+{ name: 'Yashika Sharma', role: 'Director of Technology', image: '/team/yashika-sharma.jpg', linkedin: 'https://www.linkedin.com/in/yashika-sharma-3a4778381' },
+{ name: 'Sophia Thai', role: 'Director of Events', image: '/team/sophia-thai.jpg', linkedin: 'https://www.linkedin.com/in/sophxth', github: 'https://github.com/sophxth' },
+{ name: 'Zainab Patel', role: 'Director of Finance', image: '/team/zainab-patel.jpg', linkedin: 'https://www.linkedin.com/in/zainabpatel33' },
+{ name: 'Minahil Fatima', role: 'Director of Marketing', image: '/team/minahil-fatima.jpg', linkedin: 'https://www.linkedin.com/in/minahil-fatima-4201172b4' },
+{ name: 'Nuthara Hettiarachchi', role: 'Director of Marketing', image: '/team/nuthara-hettiarachchi.jpg', linkedin: 'https://www.linkedin.com/in/nuthara-hettiarachchi-6405402bb' },
+{ name: 'Henry Luong', role: 'Director of Internal', image: '/team/henry-luong.jpg', linkedin: 'https://www.linkedin.com/in/henryluong06' },
+{ name: 'Jayden Rey Graneta', role: 'Director of Internal', image: '/team/jayden-graneta.jpg', linkedin: 'https://www.linkedin.com/in/jaydengraneta', github: 'https://github.com/jayden-graneta' },
+{ name: 'Katon Fan', role: 'Director of Outreach', image: '/team/katon-fan.jpg', linkedin: 'https://www.linkedin.com/in/katon-fan' },
+{ name: 'Uzair Farooque Grewal', role: 'Position TBD', image: '/team/uzair-grewal.jpg', linkedin: 'https://www.linkedin.com/in/uzair-grewal' },
+{ name: 'Bruce Liu', role: 'First Year Rep', image: '/team/bruce-liu.jpg', linkedin: 'https://www.linkedin.com/in/liu-bruce' }];
 
 
 export const datathonYears = [
