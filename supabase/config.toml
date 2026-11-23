@@ -1,0 +1,17 @@
+# Supabase CLI config. Only the settings this project relies on are listed;
+# everything else uses the CLI defaults.
+project_id = "las-website"
+
+# The website calls these functions with the publishable key
+# (sb_publishable_...), which is not a JWT, so gateway JWT verification must be
+# off or every request is rejected with 401. The functions do their own input
+# validation and only ever write through the service role.
+[functions.subscribe]
+verify_jwt = false
+
+[functions.sponsor-inquiry]
+verify_jwt = false
+
+# Opened from email links and mail clients, which send no Authorization header.
+[functions.unsubscribe]
+verify_jwt = false

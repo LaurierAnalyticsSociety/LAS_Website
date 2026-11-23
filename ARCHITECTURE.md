@@ -5,7 +5,7 @@
 This is a **static SPA** (Vite builds static assets) deployed on **Vercel** at
 [laurieranalytics.com](https://laurieranalytics.com). Its only backend
 concerns are form submissions (newsletter / event-notification signups and
-sponsor inquiries), handled by Supabase Edge Functions backed by Postgres.
+sponsor inquiries) and newsletter unsubscribes, handled by Supabase Edge Functions backed by Postgres.
 There is no other server, auth, or API layer in-repo.
 
 ```
@@ -15,6 +15,7 @@ Browser → index.html → src/index.tsx → App → section components
 
 Signup form  → src/utils/supabase.ts → Edge Function `subscribe`       → Postgres + Resend
 Sponsor form → src/utils/supabase.ts → Edge Function `sponsor-inquiry` → Postgres + Resend
+Email link   → Edge Function `unsubscribe` (confirm page, writes on POST) → Postgres
 ```
 
 ## Runtime flow
@@ -46,6 +47,8 @@ Sponsor form → src/utils/supabase.ts → Edge Function `sponsor-inquiry` → P
 | `src/utils/supabase.ts` | Supabase client + `subscribe()` / `submitSponsorInquiry()` helpers |
 | `supabase/functions/subscribe/index.ts` | Edge Function: validates, stores signup, sends welcome email |
 | `supabase/functions/sponsor-inquiry/index.ts` | Edge Function: validates, stores inquiry, emails the team |
+| `supabase/functions/unsubscribe/index.ts` | Edge Function: confirm page on GET, unsubscribes on POST (incl. RFC 8058 one-click) |
+| `supabase/config.toml` | Turns off gateway JWT verification for the three functions |
 | `supabase/migrations/` | Schema for all backend tables |
 | `public/` | Images, favicon, `robots.txt`, `sitemap.xml`, `site.webmanifest` |
 | `src/_designSystem/` | Bundled design-system assets from the template (styles / library) |
@@ -62,7 +65,17 @@ directly. This keeps the service-role key and the Resend key server-side.
    (type `newsletter`) or `event_notifications` (type `event`) using the
    service-role client, which bypasses RLS. Duplicate signups are treated as
    success (`already_subscribed`), not an error.
-3. On a genuinely new signup it sends a welcome email via Resend.
+3. On a genuinely new signup it sends a welcome email via Resend. **The DB
+   write is authoritative** — a failed email send does not fail the request.
+   The response's `email_sent` flag tells the UI whether to say a
+   confirmation went out.
+4. Newsletter emails link to the `unsubscribe` function. GET is read-only:
+   it validates the token (a UUID) and renders a confirm page whose form
+   POSTs back to the same URL, so link-scanning bots can't unsubscribe
+   anyone. POST sets `status = 'unsubscribed'`; a `List-Unsubscribe=One-Click`
+   body (RFC 8058, from the mail client) gets an empty 200, the browser form
+   gets the "unsubscribed" page. A later signup with the same email
+   reactivates the row.
 
 **Sponsor inquiries (`sponsor-inquiry`)**
 
@@ -86,8 +99,8 @@ API):
 | `sponsor_inquiries` | `id`, `company`, `contact_name`, `email`, `message`, `source`, `status` (`new` / `contacted` / `archived`), `created_at` |
 
 **Secrets:** the runtime injects `SUPABASE_URL` and
-`SUPABASE_SERVICE_ROLE_KEY`; `RESEND_API_KEY` and `SPONSOR_NOTIFY_TO` are
-function secrets. The browser only ever sees the `VITE_` publishable values.
+`SUPABASE_SERVICE_ROLE_KEY`; `RESEND_API_KEY`, `RESEND_FROM`,
+`SPONSOR_NOTIFY_TO` and the optional `SITE_URL` are function secrets. The browser only ever sees the `VITE_` publishable values.
 See the README for the full env-var table and deploy commands.
 
 ## Styling
@@ -114,7 +127,5 @@ See the README for the full env-var table and deploy commands.
 
 - Auth, CMS, or CMS-driven content
 - Server-side rendering
-- Double opt-in / one-click unsubscribe flow (the `status` and
-  `unsubscribe_token` columns exist for this but no unsubscribe function exists yet)
+- Double opt-in (`confirmed_at` exists but isn't used yet)
 - Sending newsletter broadcasts (only welcome emails are sent so far)
-- A verified Resend sending domain (uses `onboarding@resend.dev` for now)
