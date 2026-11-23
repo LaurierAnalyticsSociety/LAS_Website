@@ -14,7 +14,7 @@ Single-page React app with a dark, terminal-inspired UI: hero, about, datathon, 
 - **Framer Motion** (section reveals / motion)
 - **Lenis** (smooth scrolling)
 - **Lucide React** (icons)
-- **Supabase**: Postgres + Edge Functions for newsletter / event-notification signups and sponsor inquiries
+- **Supabase**: Postgres + Edge Functions for newsletter / event-notification signups, unsubscribes, and sponsor inquiries
 - **Resend**: transactional emails (welcome emails, sponsor inquiry notifications)
 - **Vercel**: static hosting for the production site
 
@@ -57,10 +57,12 @@ The newsletter and sponsor forms call Supabase Edge Functions, so the two
 │   ├── utils/supabase.ts   # Supabase client + subscribe() / submitSponsorInquiry()
 │   └── components/         # Page sections + UI primitives
 ├── supabase/
+│   ├── config.toml         # Function settings (JWT verification off)
 │   ├── migrations/         # Table schema (signup tables, sponsor inquiries)
 │   └── functions/
 │       ├── subscribe/        # Edge Function: store signup + send welcome email
-│       └── sponsor-inquiry/  # Edge Function: store inquiry + notify the team
+│       ├── sponsor-inquiry/  # Edge Function: store inquiry + notify the LAS inbox
+│       └── unsubscribe/      # Edge Function: confirm page + unsubscribe on POST
 └── ARCHITECTURE.md         # Structure and conventions
 ```
 
@@ -94,6 +96,11 @@ one-week cache for images.
   (not hydration), so components don't need to produce identical server and
   client markup, but anything run during render must not touch `window` /
   `document` (keep that in effects).
+- **No-JS / reduced motion:** the prerendered HTML starts with the intro
+  overlay (`data-preloader`) and reveal animations at their hidden start
+  state. Inline CSS in `index.html` hides the overlay for
+  `prefers-reduced-motion` visitors, and a `<noscript>` style hides it and
+  shows all content (including FAQ answers) when JavaScript is off.
 - **Structured data:** Organization / WebSite / WebPage JSON-LD lives in
   `index.html`; the FAQPage JSON-LD is generated from `faqs` in
   `src/data/site.ts` at build time.
@@ -101,8 +108,9 @@ one-week cache for images.
   tags are in `index.html`. The social preview image is `public/og-image.jpg`
   (1200×630). Icons: `favicon.svg`, `favicon-48.png`, `apple-touch-icon.png`,
   `icon-192.png`, `icon-512.png`.
-- **Sitemap:** `public/sitemap.xml` (with image entries); `lastmod` is stamped
-  with the build date.
+- **Sitemap:** `public/sitemap.xml` (with image entries). `lastmod` is
+  maintained by hand: bump it only when page content actually changes, so
+  search engines keep trusting it.
 - **Domain:** if the domain ever changes, update the URLs in `index.html`,
   `public/robots.txt` and `public/sitemap.xml`.
 - After deploying, submit the sitemap in Google Search Console and Bing
@@ -143,7 +151,7 @@ Functions using the service role.
 | `event_notifications` | "Notify me when applications open" signups (`email`, `event_key`, `source`) |
 | `sponsor_inquiries` | Partnership inquiries (`company`, `contact_name`, `email`, `message`, `source`, `status`) |
 
-Apply migrations with `supabase db push` (they are idempotent).
+See [Schema](#schema) for applying them.
 
 ### Environment variables
 
@@ -154,36 +162,84 @@ See `.env.example`.
 | `VITE_SUPABASE_URL` | Browser (`.env` / Vercel) | Project URL, safe to expose |
 | `VITE_SUPABASE_PUBLISHABLE_KEY` | Browser (`.env` / Vercel) | Publishable key, safe to expose |
 | `SUPABASE_SERVICE_ROLE_KEY` | Server only | **Never** commit or expose to the browser |
-| `RESEND_API_KEY` | Edge Function secret | Used by both functions |
-| `SPONSOR_NOTIFY_TO` | Edge Function secret | Inbox that receives sponsor inquiries |
+| `RESEND_API_KEY` | Edge Function secret | Set on the function, not read from `.env` at runtime |
+| `RESEND_FROM` | Edge Function secret | Sender on a Resend-verified domain, e.g. `Laurier Analytics <hello@laurieranalytics.com>` |
+| `SPONSOR_NOTIFY_TO` | Edge Function secret | Inbox for sponsor inquiries: `laurieranalytics@gmail.com` |
+| `SITE_URL` | Edge Function secret | Optional. "Back to site" link on the unsubscribe page (defaults to `https://laurieranalytics.com`) |
 
 `.env` is gitignored. The Edge Functions read `SUPABASE_URL` and
 `SUPABASE_SERVICE_ROLE_KEY` automatically from the Supabase runtime; the rest
 must be set as function secrets:
 
 ```bash
-supabase secrets set RESEND_API_KEY=re_xxx SPONSOR_NOTIFY_TO=team@example.com --project-ref <project-ref>
+supabase secrets set --project-ref <project-ref> \
+  RESEND_API_KEY=re_xxx \
+  RESEND_FROM='Laurier Analytics <hello@laurieranalytics.com>' \
+  SPONSOR_NOTIFY_TO=laurieranalytics@gmail.com
 # or set them in Dashboard → Project Settings → Edge Functions
 ```
 
 ### Deploying the functions
 
 ```bash
-supabase functions deploy subscribe
-supabase functions deploy sponsor-inquiry
+supabase functions deploy subscribe sponsor-inquiry unsubscribe --project-ref <project-ref>
 ```
 
-> **Email deliverability:** until a domain (e.g. `laurieranalytics.com`) is
-> verified in Resend, mail is sent from `onboarding@resend.dev` and only
-> reliably delivers to the Resend account owner. Rows are still stored. After
-> verifying the domain, update `FROM_ADDRESS` in both
-> `supabase/functions/*/index.ts` and redeploy.
+`supabase/config.toml` turns off gateway JWT verification for all three
+functions. The site calls them with the publishable key (`sb_publishable_…`),
+which is not a JWT, and the unsubscribe link is opened straight from email.
+With verification on, every request fails with 401.
+
+> **Email deliverability:** without `RESEND_FROM`, mail is sent from
+> `onboarding@resend.dev` and only reliably delivers to the Resend account
+> owner (other addresses land in spam or don't arrive, but are still stored).
+> Verify `laurieranalytics.com` in Resend (Domains → add the DNS records it
+> lists), then set `RESEND_FROM` to an address on it.
+
+### Unsubscribe
+
+Every newsletter welcome email has an unsubscribe link and
+`List-Unsubscribe` / `List-Unsubscribe-Post` headers pointing at the
+`unsubscribe` function. Opening the link (GET) only shows a confirm page,
+because mail security scanners prefetch links; the subscriber's `status` is
+set to `unsubscribed` only on POST, either from that page's button or from an
+RFC 8058 one-click request sent by the mail client (Gmail, Yahoo, etc.).
+Signing up again reactivates the row.
+
+### Schema
+
+Tables are defined in `supabase/migrations/`. The migrations
+are idempotent, so they're safe to run against a project that already has
+the tables:
+
+```bash
+supabase link --project-ref <project-ref>
+supabase db push
+```
+
+### Restoring production (or moving to a new project)
+
+1. Create (or restore) the Supabase project and note its project ref.
+2. `supabase link --project-ref <ref>` then `supabase db push` to create the tables.
+   If you're moving data from an old project, export `newsletter_subscribers`,
+   `event_notifications` and `sponsor_inquiries` from it first and import them
+   into the new one.
+3. Set the function secrets above, then deploy all three functions.
+4. In Vercel, set `VITE_SUPABASE_URL` and `VITE_SUPABASE_PUBLISHABLE_KEY`
+   (Project Settings → API Keys) for Production, Preview and Development.
+5. Redeploy on Vercel. `VITE_` vars are baked in at build time, so changing
+   them does nothing until the next build.
+6. Check that `https://<ref>.supabase.co` resolves, then submit a test
+   newsletter signup and a test sponsor inquiry from the live site. Confirm the
+   rows are in the tables, the welcome email and its unsubscribe link work, and
+   the sponsor notification reaches the LAS inbox with Reply-To set to the
+   submitter.
 
 ## Design notes
 
 - Generated from a [Magic Patterns](https://www.magicpatterns.com/c/2a21qyqaumtbpafpn3qfba) design, then adapted for LAS.
 - Dark theme is forced on `<html>` via `document.documentElement.classList.add('dark')` in `App`.
-- FAQ structured data (JSON-LD) is generated at runtime from `faqs` in `site.ts`, so it always matches the visible FAQ.
+- The page title is static in `index.html`. FAQ structured data (JSON-LD) is generated at build time from `faqs` in `site.ts` by `scripts/prerender.mjs`, so it always matches the visible FAQ.
 - Optional `App` props: `asciiDensity` (`'fine' | 'standard' | 'bold'`), `showIntro` (preloader, boolean), and `customCursor` (boolean). The intro is skipped when the user prefers reduced motion.
 
 ## License

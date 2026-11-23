@@ -1,6 +1,7 @@
 // Bakes the rendered page into dist/index.html so crawlers and link-preview
-// bots that don't run JavaScript still see the full content, then stamps the
-// sitemap with the build date.
+// bots that don't run JavaScript still see the full content, and adds the
+// FAQPage JSON-LD generated from src/data/site.ts. Function replacements are
+// used so `$&`, `$'` etc. in rendered copy are inserted literally.
 import { readFile, writeFile, rm } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 
@@ -15,14 +16,9 @@ if (!html.includes(rootTag)) throw new Error('prerender: #root placeholder not f
 
 const ld = faqJsonLd().replace(/</g, '\\u003c');
 const out = html
-  .replace(rootTag, `<div id="root">${render()}</div>`)
-  .replace('</head>', `    <script type="application/ld+json">${ld}</script>\n  </head>`);
+  .replace(rootTag, () => `<div id="root">${render()}</div>`)
+  .replace('</head>', () => `    <script type="application/ld+json">${ld}</script>\n  </head>`);
 await writeFile(indexPath, out);
 
-const sitemapPath = `${dist}sitemap.xml`;
-const today = new Date().toISOString().slice(0, 10);
-const sitemap = await readFile(sitemapPath, 'utf8');
-await writeFile(sitemapPath, sitemap.replace(/<lastmod>[^<]*<\/lastmod>/, `<lastmod>${today}</lastmod>`));
-
 await rm(serverDir, { recursive: true, force: true });
-console.log('prerender: wrote dist/index.html and dist/sitemap.xml');
+console.log('prerender: wrote dist/index.html');

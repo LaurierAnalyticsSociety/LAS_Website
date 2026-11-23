@@ -4,7 +4,7 @@ import { Check, Loader2, ArrowRight, AlertCircle } from 'lucide-react';
 import { AsciiField } from './AsciiField';
 import { Reveal } from './Reveal';
 import { WordReveal } from './WordReveal';
-import { subscribe } from '../utils/supabase';
+import { subscribe, type SubscribeResult } from '../utils/supabase';
 
 type Status = 'idle' | 'loading' | 'success' | 'error';
 
@@ -17,6 +17,7 @@ export function Newsletter({ cellWidth = 9, cellHeight = 14 }: NewsletterProps) 
   const [email, setEmail] = useState('');
   const [status, setStatus] = useState<Status>('idle');
   const [errorMsg, setErrorMsg] = useState('Enter a valid email address to continue.');
+  const [result, setResult] = useState<SubscribeResult | null>(null);
 
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -36,6 +37,7 @@ export function Newsletter({ cellWidth = 9, cellHeight = 14 }: NewsletterProps) 
         source: 'newsletter_section',
       });
       if (result.ok) {
+        setResult(result);
         setStatus('success');
       } else {
         setErrorMsg(result.error ?? 'Something went wrong. Please try again.');
@@ -49,8 +51,19 @@ export function Newsletter({ cellWidth = 9, cellHeight = 14 }: NewsletterProps) 
 
   const reset = () => {
     setEmail('');
+    setResult(null);
     setStatus('idle');
   };
+
+  // Only claim an email went out when the function says it did.
+  const successTitle = result?.already_subscribed
+    ? "You're already on the list."
+    : "You're on the list. Welcome to LAS.";
+  const successDetail = result?.already_subscribed
+    ? `${email} is already subscribed.`
+    : result?.email_sent
+      ? `Confirmation sent to ${email}`
+      : `Subscribed ${email}. We couldn't send a confirmation email right now.`;
 
   return (
     <section id="newsletter" className="relative isolate overflow-hidden border-b border-paper/10">
@@ -99,8 +112,8 @@ export function Newsletter({ cellWidth = 9, cellHeight = 14 }: NewsletterProps) 
                       <Check className="h-4 w-4" />
                     </span>
                     <div className="min-w-0 flex-1">
-                      <p className="font-heading text-sm text-paper">You&apos;re on the list. Welcome to LAS.</p>
-                      <p className="mt-1 break-all font-mono text-[11px] text-paper/50">Confirmation sent to {email}</p>
+                      <p className="font-heading text-sm text-paper">{successTitle}</p>
+                      <p className="mt-1 break-all font-mono text-[11px] text-paper/50">{successDetail}</p>
                     </div>
                     <button
                     type="button"

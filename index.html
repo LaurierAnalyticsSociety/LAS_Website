@@ -53,6 +53,25 @@
     <meta name="twitter:image" content="https://laurieranalytics.com/og-image.jpg" />
     <meta name="twitter:image:alt" content="Laurier Analytics Society members at The Data Minds Challenge datathon." />
 
+    <!-- The prerendered #root starts with the intro overlay and with reveal
+         animations at their hidden start state. Reduced-motion visitors skip
+         the intro, and without JavaScript nothing would ever animate in, so
+         show the content in both cases. -->
+    <style>
+      @media (prefers-reduced-motion: reduce) {
+        [data-preloader] { display: none !important; }
+      }
+    </style>
+    <noscript>
+      <style>
+        [data-preloader] { display: none !important; }
+        #root [style^="opacity:0;transform"] { opacity: 1 !important; transform: none !important; }
+        #root [style^="transform:translateY(110%)"] { transform: none !important; }
+        #root [id^="faq-panel-"] { grid-template-rows: 1fr !important; }
+        #root [id^="faq-panel-"] p { opacity: 1 !important; }
+      </style>
+    </noscript>
+
     <!-- Structured data. FAQPage JSON-LD is generated from src/data/site.ts at
          build time by scripts/prerender.mjs. -->
     <script type="application/ld+json">
@@ -60,7 +79,7 @@
         "@context": "https://schema.org",
         "@graph": [
           {
-            "@type": ["EducationalOrganization", "StudentOrganization"],
+            "@type": "EducationalOrganization",
             "@id": "https://laurieranalytics.com/#organization",
             "name": "Laurier Analytics Society",
             "alternateName": ["LAS", "Laurier Analytics"],
@@ -117,13 +136,13 @@
     </script>
   </head>
   <body>
-    <div id="root"></div>
     <noscript>
-      <p style="padding: 1rem; color: #e5e7eb; background: #070b0d">
+      <p style="position: relative; z-index: 60; margin: 0; padding: 1rem; color: #e5e7eb; background: #070b0d">
         The Laurier Analytics Society website works best with JavaScript enabled. Email us at
         <a href="mailto:laurieranalytics@gmail.com" style="color: #5eead4">laurieranalytics@gmail.com</a>.
       </p>
     </noscript>
+    <div id="root"></div>
     <script type="module" src="/src/index.tsx"></script>
   </body>
 </html>

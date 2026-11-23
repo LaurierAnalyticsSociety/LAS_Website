@@ -45,6 +45,7 @@ export function Preloader({ onDone }: PreloaderProps) {
       {!leaving ?
       <motion.div
         key="preloader"
+        data-preloader
         role="status"
         aria-live="polite"
         aria-label={`Loading Laurier Analytics Society, ${pct}%`}
