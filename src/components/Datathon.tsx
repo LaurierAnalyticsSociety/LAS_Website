@@ -74,7 +74,7 @@ export function Datathon({ cellWidth = 10, cellHeight = 15 }: DatathonProps) {
                     style={{ opacity: active ? 1 : 0, pointerEvents: active ? 'auto' : 'none' }}
                     aria-hidden={!active}
                     inert={!active ? '' : undefined}>
-                    <p className="font-display text-2xl tracking-[-0.01em] text-paper sm:text-[1.75rem]">{item.title}</p>
+                    <h3 className="font-display text-2xl tracking-[-0.01em] text-paper sm:text-[1.75rem]">{item.title}</h3>
                     <p className="mx-auto mt-4 max-w-xl text-[15px] leading-relaxed text-paper/60">{item.summary}</p>
                   </div>
                 );
@@ -126,6 +126,8 @@ function PhotoReel({ images }: { images: YearPhoto[] }) {
             key={photo.src}
             src={photo.src}
             alt={photo.alt}
+            loading="lazy"
+            decoding="async"
             custom={dir}
             variants={{
               enter: (direction: number) => ({ opacity: 0, x: reduced ? 0 : direction * 40 }),

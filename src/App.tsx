@@ -11,7 +11,6 @@ import { Footer } from './components/Footer';
 import { CustomCursor } from './components/CustomCursor';
 import { Preloader } from './components/Preloader';
 import { SmoothScroll } from './components/SmoothScroll';
-import { faqs } from './data/site';
 import { Workshops } from './components/Workshops';
 
 type AsciiDensity = 'fine' | 'standard' | 'bold';
@@ -37,37 +36,13 @@ export function App({
 }: AppProps) {
   const isHome = page === 'home';
   const [introDone, setIntroDone] = useState(
-    () => !isHome || !showIntro || window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    () => !isHome || !showIntro ||
+      (typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches)
   );
 
   useEffect(() => {
     document.documentElement.classList.add('dark');
-    document.title = isHome
-      ? 'Laurier Analytics Society (LAS) - Data & Analytics Club at WLU'
-      : 'Workshops | Laurier Analytics Society';
-  }, [isHome]);
-
-  // Inject FAQ structured data from the same source as the visible FAQ, so the
-  // rich-result markup can never drift from what's on the page.
-  useEffect(() => {
-    if (!isHome) return;
-    const script = document.createElement('script');
-    script.type = 'application/ld+json';
-    script.id = 'faq-jsonld';
-    script.textContent = JSON.stringify({
-      '@context': 'https://schema.org',
-      '@type': 'FAQPage',
-      mainEntity: faqs.map((faq) => ({
-        '@type': 'Question',
-        name: faq.q,
-        acceptedAnswer: { '@type': 'Answer', text: faq.a }
-      }))
-    });
-    document.head.appendChild(script);
-    return () => {
-      document.getElementById('faq-jsonld')?.remove();
-    };
-  }, [isHome]);
+  }, []);
 
   useEffect(() => {
     if (!showIntro) setIntroDone(true);

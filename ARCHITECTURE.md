@@ -20,9 +20,9 @@ Email link   → Edge Function `unsubscribe` (confirm page, writes on POST) → 
 
 ## Runtime flow
 
-1. `index.html` mounts `#root`, carries static SEO metadata (canonical, Open Graph, Twitter, Organization / WebSite JSON-LD), and loads `src/index.tsx`.
+1. `index.html` mounts `#root`, carries static SEO metadata (canonical, Open Graph, Twitter, Organization / WebSite / WebPage JSON-LD), and loads `src/index.tsx`. In production builds `#root` already contains prerendered markup (see Build & deploy).
 2. `index.tsx` creates a React 18 root and renders `<App />`.
-3. `App` enables dark mode, sets the document title, injects FAQ JSON-LD from `faqs`, shows the `Preloader` (unless disabled or reduced motion), and renders inside `SmoothScroll` (Lenis):
+3. `App` enables dark mode, shows the `Preloader` (unless disabled or reduced motion), and renders inside `SmoothScroll` (Lenis). The title is static in `index.html` and the FAQPage JSON-LD is added at build time by `scripts/prerender.mjs`:
    - `Nav` → `Hero` → `About` → `Datathon` → `Team` → `Faq` → `Newsletter` → `Sponsors` → `Footer`
 4. Sections pull structured data from `src/data/site.ts` and use shared UI (`Reveal`, `WordReveal`, `SectionHeading`, `AsciiField`, accordion).
 
@@ -30,7 +30,10 @@ Email link   → Edge Function `unsubscribe` (confirm page, writes on POST) → 
 
 | Path | Role |
 |------|------|
-| `src/App.tsx` | Page shell, props (`asciiDensity`, `showIntro`, `customCursor`), section order, FAQ JSON-LD |
+| `src/App.tsx` | Page shell, props (`asciiDensity`, `showIntro`, `customCursor`), section order |
+| `src/entry-server.tsx` | SSR entry used only at build time: `render()` and FAQPage JSON-LD |
+| `scripts/prerender.mjs` | Post-build step that bakes rendered HTML into both `dist/index.html` and `dist/workshops/index.html` |
+| `vercel.json` | Cache and security headers |
 | `src/data/site.ts` | Single source of truth for marketing content |
 | `src/components/AsciiField.tsx` | ASCII / matrix-style visual field (uses `src/utils/heatmap.ts`) |
 | `src/components/Preloader.tsx` | Intro animation shown before the hero |
@@ -114,7 +117,9 @@ See the README for the full env-var table and deploy commands.
 
 ## Build & deploy
 
-- `npm run build` outputs to `dist/`.
+- `npm run build` outputs to `dist/` in three steps: the client bundle (`vite build`), an SSR bundle of `src/entry-server.tsx` (`dist-server/`, deleted afterwards), and `scripts/prerender.mjs`, which injects the rendered page and FAQPage JSON-LD into `dist/index.html`. The sitemap's `lastmod` is maintained by hand in `public/sitemap.xml`.
+- The prerendered markup includes the intro overlay and hidden reveal states; `index.html` hides the overlay under `prefers-reduced-motion` and, via `<noscript>` CSS, hides it and shows all content when JavaScript is off.
+- The client replaces the prerendered markup via `createRoot` rather than hydrating, so render-time code must be SSR-safe (no `window` / `document` outside effects) but server/client markup doesn't need to match.
 - **Frontend:** hosted on Vercel, served at `https://laurieranalytics.com` (`www` redirects to the apex). Build command `npm run build`, output directory `dist`. `VITE_SUPABASE_URL` and `VITE_SUPABASE_PUBLISHABLE_KEY` must be set in the Vercel project's environment variables.
 - **Backend:** Edge Functions and migrations are deployed to Supabase with the Supabase CLI, independently of Vercel.
 - Canonical, Open Graph, and JSON-LD URLs in `index.html`, plus `public/robots.txt` and `public/sitemap.xml`, must point at the production domain.

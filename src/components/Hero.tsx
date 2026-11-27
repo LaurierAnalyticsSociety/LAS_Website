@@ -38,6 +38,13 @@ export function Hero({ ready = true }: HeroProps) {
           Laurier Analytics Society
         </motion.h1>
 
+        <motion.p
+          {...enter(0.22)}
+          className="mt-5 max-w-xl text-[15px] leading-relaxed text-paper/60 sm:text-base">
+          Wilfrid Laurier University&apos;s student-run data and analytics club in Waterloo, Ontario. Workshops,
+          industry mentorship, and the annual LAS Datathon. Every program welcome.
+        </motion.p>
+
         <motion.div {...enter(0.35)} className="mt-8 flex w-full flex-col items-stretch justify-center gap-3 min-[380px]:w-auto min-[380px]:flex-row sm:mt-10">
           <a href="#newsletter" className="btn-signal" data-cursor="join">
             Join the society

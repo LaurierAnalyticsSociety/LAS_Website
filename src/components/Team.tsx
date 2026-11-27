@@ -64,8 +64,9 @@ export function Team() {
                   <div className="relative aspect-square overflow-hidden border border-paper/10 bg-ink">
                     <img
                       src={member.image}
-                      alt={`Portrait of ${member.name}`}
+                      alt={`${member.name}, ${member.role} of the Laurier Analytics Society`}
                       loading="lazy"
+                      decoding="async"
                       width={800}
                       height={800}
                       className="h-full w-full object-cover"
