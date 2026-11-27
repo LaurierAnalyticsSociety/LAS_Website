@@ -5,5 +5,6 @@ import { App } from "./App";
 
 const rootEl = document.getElementById("root");
 if (rootEl) {
-  ReactDOM.createRoot(rootEl).render(<App />);
+  const page = /^\/workshops\/?$/.test(window.location.pathname) ? 'workshops' : 'home';
+  ReactDOM.createRoot(rootEl).render(<App page={page} />);
 }

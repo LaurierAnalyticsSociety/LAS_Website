@@ -12,6 +12,7 @@ import { CustomCursor } from './components/CustomCursor';
 import { Preloader } from './components/Preloader';
 import { SmoothScroll } from './components/SmoothScroll';
 import { faqs } from './data/site';
+import { Workshops } from './components/Workshops';
 
 type AsciiDensity = 'fine' | 'standard' | 'bold';
 
@@ -19,6 +20,7 @@ interface AppProps {
   asciiDensity?: AsciiDensity;
   showIntro?: boolean;
   customCursor?: boolean;
+  page?: 'home' | 'workshops';
 }
 
 const DENSITY: Record<AsciiDensity, {w: number;h: number;}> = {
@@ -30,20 +32,25 @@ const DENSITY: Record<AsciiDensity, {w: number;h: number;}> = {
 export function App({
   asciiDensity = 'standard',
   showIntro = true,
-  customCursor = true
+  customCursor = true,
+  page = 'home'
 }: AppProps) {
+  const isHome = page === 'home';
   const [introDone, setIntroDone] = useState(
-    () => !showIntro || window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    () => !isHome || !showIntro || window.matchMedia('(prefers-reduced-motion: reduce)').matches
   );
 
   useEffect(() => {
     document.documentElement.classList.add('dark');
-    document.title = 'Laurier Analytics Society (LAS) - Data & Analytics Club at WLU';
-  }, []);
+    document.title = isHome
+      ? 'Laurier Analytics Society (LAS) - Data & Analytics Club at WLU'
+      : 'Workshops | Laurier Analytics Society';
+  }, [isHome]);
 
   // Inject FAQ structured data from the same source as the visible FAQ, so the
   // rich-result markup can never drift from what's on the page.
   useEffect(() => {
+    if (!isHome) return;
     const script = document.createElement('script');
     script.type = 'application/ld+json';
     script.id = 'faq-jsonld';
@@ -60,7 +67,7 @@ export function App({
     return () => {
       document.getElementById('faq-jsonld')?.remove();
     };
-  }, []);
+  }, [isHome]);
 
   useEffect(() => {
     if (!showIntro) setIntroDone(true);
@@ -74,12 +81,13 @@ export function App({
         <CustomCursor enabled={customCursor} />
         {!introDone ? <Preloader onDone={() => setIntroDone(true)} /> : null}
         <a
-          href="#about"
+          href={isHome ? '#about' : '#workshop-library'}
           className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[60] focus:bg-cyan focus:px-4 focus:py-2 focus:text-ink">
           Skip to content
         </a>
-        <Nav />
+        <Nav isHome={isHome} />
         <main>
+          {isHome ? <>
           <Hero ready={introDone} />
           <About />
           <Datathon cellWidth={cell.w + 1} cellHeight={cell.h + 1} />
@@ -87,8 +95,9 @@ export function App({
           <Faq />
           <Newsletter cellWidth={cell.w} cellHeight={cell.h} />
           <Sponsors cellWidth={cell.w} cellHeight={cell.h} />
+          </> : <Workshops />}
         </main>
-        <Footer />
+        <Footer isHome={isHome} />
       </div>
     </SmoothScroll>
   );
