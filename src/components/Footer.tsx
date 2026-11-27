@@ -1,15 +1,15 @@
 import React from 'react';
 import { ArrowUpRight, ArrowUp } from 'lucide-react';
 import { Logo } from './Logo';
-import { navLinks, socials } from '../data/site';
+import { navLinks, socials, siteHref } from '../data/site';
 
-export function Footer() {
+export function Footer({ isHome = true }: { isHome?: boolean }) {
   return (
     <footer className="relative overflow-hidden">
       <div className="mx-auto max-w-[1400px] px-5 py-14 sm:px-8 sm:py-20">
         <div className="grid gap-10 sm:grid-cols-2 sm:gap-12 lg:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)_minmax(0,1fr)]">
           <div className="text-center sm:col-span-2 sm:text-left lg:col-span-1">
-            <a href="#top" className="group inline-flex max-w-full flex-col items-center gap-3 sm:flex-row sm:gap-4">
+            <a href={siteHref('#top', isHome)} className="group inline-flex max-w-full flex-col items-center gap-3 sm:flex-row sm:gap-4">
               <Logo className="h-10 w-[90px] sm:h-12 sm:w-[108px]" interactive />
               <span>
                 <span className="block font-display text-[1.45rem] leading-none text-paper sm:text-2xl">Laurier Analytics Society</span>
@@ -26,7 +26,7 @@ export function Footer() {
               {navLinks.map((link) =>
               <li key={link.href}>
                   <a
-                  href={link.href}
+                  href={siteHref(link.href, isHome)}
                   className="group inline-flex min-h-11 items-center justify-center gap-2 text-[14px] text-paper/55 transition-colors duration-300 hover:text-paper sm:justify-start">
                   
                     <span className="h-px w-0 bg-cyan transition-all duration-300 group-hover:w-4" />

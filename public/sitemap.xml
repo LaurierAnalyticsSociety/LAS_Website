@@ -23,4 +23,9 @@
       <image:loc>https://laurieranalytics.com/datathon-2025-awards.jpg</image:loc>
     </image:image>
   </url>
+  <url>
+    <loc>https://laurieranalytics.com/workshops/</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
 </urlset>
