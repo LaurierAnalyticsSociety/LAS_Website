@@ -11,6 +11,7 @@ import { Footer } from './components/Footer';
 import { CustomCursor } from './components/CustomCursor';
 import { Preloader } from './components/Preloader';
 import { SmoothScroll } from './components/SmoothScroll';
+import { Workshops } from './components/Workshops';
 
 type AsciiDensity = 'fine' | 'standard' | 'bold';
 
@@ -18,6 +19,7 @@ interface AppProps {
   asciiDensity?: AsciiDensity;
   showIntro?: boolean;
   customCursor?: boolean;
+  page?: 'home' | 'workshops';
 }
 
 const DENSITY: Record<AsciiDensity, {w: number;h: number;}> = {
@@ -29,11 +31,12 @@ const DENSITY: Record<AsciiDensity, {w: number;h: number;}> = {
 export function App({
   asciiDensity = 'standard',
   showIntro = true,
-  customCursor = true
+  customCursor = true,
+  page = 'home'
 }: AppProps) {
+  const isHome = page === 'home';
   const [introDone, setIntroDone] = useState(
-    () =>
-      !showIntro ||
+    () => !isHome || !showIntro ||
       (typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches)
   );
 
@@ -53,12 +56,13 @@ export function App({
         <CustomCursor enabled={customCursor} />
         {!introDone ? <Preloader onDone={() => setIntroDone(true)} /> : null}
         <a
-          href="#about"
+          href={isHome ? '#about' : '#workshop-library'}
           className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[60] focus:bg-cyan focus:px-4 focus:py-2 focus:text-ink">
           Skip to content
         </a>
-        <Nav />
+        <Nav isHome={isHome} />
         <main>
+          {isHome ? <>
           <Hero ready={introDone} />
           <About />
           <Datathon cellWidth={cell.w + 1} cellHeight={cell.h + 1} />
@@ -66,8 +70,9 @@ export function App({
           <Faq />
           <Newsletter cellWidth={cell.w} cellHeight={cell.h} />
           <Sponsors cellWidth={cell.w} cellHeight={cell.h} />
+          </> : <Workshops />}
         </main>
-        <Footer />
+        <Footer isHome={isHome} />
       </div>
     </SmoothScroll>
   );

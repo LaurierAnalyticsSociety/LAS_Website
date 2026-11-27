@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useId, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Check, Loader2, ArrowRight, AlertCircle } from 'lucide-react';
 import { AsciiField } from './AsciiField';
@@ -11,9 +11,12 @@ type Status = 'idle' | 'loading' | 'success' | 'error';
 interface NewsletterProps {
   cellWidth?: number;
   cellHeight?: number;
+  compact?: boolean;
+  source?: string;
 }
 
-export function Newsletter({ cellWidth = 9, cellHeight = 14 }: NewsletterProps) {
+export function Newsletter({ cellWidth = 9, cellHeight = 14, compact = false, source = 'newsletter_section' }: NewsletterProps) {
+  const formId = useId();
   const [email, setEmail] = useState('');
   const [status, setStatus] = useState<Status>('idle');
   const [errorMsg, setErrorMsg] = useState('Enter a valid email address to continue.');
@@ -34,7 +37,7 @@ export function Newsletter({ cellWidth = 9, cellHeight = 14 }: NewsletterProps) 
       const result = await subscribe({
         email: trimmed,
         type: 'newsletter',
-        source: 'newsletter_section',
+        source,
       });
       if (result.ok) {
         setResult(result);
@@ -64,6 +67,55 @@ export function Newsletter({ cellWidth = 9, cellHeight = 14 }: NewsletterProps) 
     : result?.email_sent
       ? `Confirmation sent to ${email}`
       : `Subscribed ${email}. We couldn't send a confirmation email right now.`;
+
+  if (compact) {
+    return (
+      <div className="w-full min-w-0">
+        {status === 'success' ? (
+          <div role="status" className="border border-cyan/25 bg-cyan/[0.06] p-5">
+            <div className="flex items-start gap-3">
+              <Check className="mt-0.5 h-5 w-5 shrink-0 text-cyan" aria-hidden="true" />
+              <div className="min-w-0">
+                <p className="text-sm text-paper">{successTitle}</p>
+                <p className="mt-2 break-words text-sm leading-relaxed text-paper/60">{successDetail}</p>
+              </div>
+            </div>
+            <button type="button" onClick={reset} className="mt-3 min-h-11 text-sm text-cyan hover:text-paper focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-cyan">
+              Subscribe another email
+            </button>
+          </div>
+        ) : (
+          <form onSubmit={onSubmit} noValidate aria-label="Workshop newsletter signup" aria-busy={status === 'loading'}>
+            <label htmlFor={formId} className="mb-3 block text-sm text-paper/80">Stay in the loop</label>
+            <div className="flex min-w-0 flex-col gap-2 sm:flex-row">
+              <input
+                id={formId}
+                type="email"
+                name="email"
+                autoComplete="email"
+                required
+                disabled={status === 'loading'}
+                value={email}
+                onChange={(event) => {
+                  setEmail(event.target.value);
+                  if (status === 'error') setStatus('idle');
+                }}
+                placeholder="you@mylaurier.ca"
+                aria-invalid={status === 'error'}
+                aria-describedby={`${formId}-consent${status === 'error' ? ` ${formId}-error` : ''}`}
+                className={`h-12 min-w-0 flex-1 border bg-paper/[0.03] px-4 text-base text-paper outline-none placeholder:text-paper/30 disabled:opacity-70 ${status === 'error' ? 'border-heat/70 focus:border-heat' : 'border-paper/15 focus:border-cyan/55'}`}
+              />
+              <button type="submit" disabled={status === 'loading'} className="btn-signal shrink-0 disabled:opacity-70">
+                {status === 'loading' ? <><Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" /> Subscribing</> : 'Subscribe'}
+              </button>
+            </div>
+            {status === 'error' ? <p id={`${formId}-error`} role="alert" className="mt-3 text-sm leading-relaxed text-heat">{errorMsg}</p> : null}
+            <p id={`${formId}-consent`} className="mt-3 text-sm leading-relaxed text-paper/45">Subscribe to LAS email updates. Unsubscribe anytime.</p>
+          </form>
+        )}
+      </div>
+    );
+  }
 
   return (
     <section id="newsletter" className="relative isolate overflow-hidden border-b border-paper/10">

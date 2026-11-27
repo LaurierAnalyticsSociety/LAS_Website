@@ -32,7 +32,7 @@ Email link   → Edge Function `unsubscribe` (confirm page, writes on POST) → 
 |------|------|
 | `src/App.tsx` | Page shell, props (`asciiDensity`, `showIntro`, `customCursor`), section order |
 | `src/entry-server.tsx` | SSR entry used only at build time: `render()` and FAQPage JSON-LD |
-| `scripts/prerender.mjs` | Post-build step that bakes rendered HTML into `dist/index.html` |
+| `scripts/prerender.mjs` | Post-build step that bakes rendered HTML into both `dist/index.html` and `dist/workshops/index.html` |
 | `vercel.json` | Cache and security headers |
 | `src/data/site.ts` | Single source of truth for marketing content, including the `team` roster (`TeamMember`: name, role, headshot in `public/team/`, LinkedIn, optional GitHub), ordered by seniority |
 | `src/components/AsciiField.tsx` | ASCII / matrix-style visual field (uses `src/utils/heatmap.ts`) |

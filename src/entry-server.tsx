@@ -2,8 +2,8 @@ import { renderToString } from 'react-dom/server';
 import { App } from './App';
 import { faqs } from './data/site';
 
-export function render() {
-  return renderToString(<App />);
+export function render(page: 'home' | 'workshops' = 'home') {
+  return renderToString(<App page={page} />);
 }
 
 export function faqJsonLd() {

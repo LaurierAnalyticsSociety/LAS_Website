@@ -6,9 +6,29 @@ export const brand = {
 export const navLinks = [
 { label: 'About', href: '#about' },
 { label: 'Datathon', href: '#datathon' },
+{ label: 'Workshops', href: '/workshops/' },
 { label: 'Team', href: '#team' },
 { label: 'FAQ', href: '#faq' },
 { label: 'Partners', href: '#partners' }];
+
+export const workshops = [{
+  title: "API's For DATA - A Beginners Workshop",
+  youtubeId: 'SN1mOhp1eck'
+}];
+
+export const workshopPage = {
+  introduction: 'Practical workshops from Laurier Analytics Society. Watch, follow along, and build your confidence with data.',
+  guide: [
+    { title: 'Watch with a question.', description: 'Pick something you want to understand. Keep it in mind as you work through the recording.' },
+    { title: 'Pause and try it.', description: 'Keep your own workspace open. Give yourself time to experiment before moving on.' },
+    { title: 'Make it your own.', description: 'Change an example, explore a different idea, or note a question to bring to the LAS community.' }
+  ],
+  updates: 'Keep learning with LAS. Get workshop announcements, events, and practical opportunities.'
+};
+
+export function siteHref(href: string, isHome: boolean) {
+  return !isHome && href.startsWith('#') ? `/${href}` : href;
+}
 
 
 export const aboutParagraphs = [
