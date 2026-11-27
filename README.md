@@ -4,7 +4,7 @@ Official marketing site for the **Laurier Analytics Society**, Wilfrid Laurier U
 
 **Live:** [laurieranalytics.com](https://laurieranalytics.com) (hosted on Vercel; `www.laurieranalytics.com` redirects to the apex domain)
 
-Single-page React app with a dark, terminal-inspired UI: hero, about, datathon, team, FAQ, newsletter, and sponsors.
+React site with a dark, terminal-inspired homepage and a separate workshop library at `/workshops/`.
 
 ## Stack
 
@@ -69,6 +69,8 @@ The newsletter and sponsor forms call Supabase Edge Functions, so the two
 ## Editing content
 
 Almost all site copy lives in **`src/data/site.ts`**: nav links, about text, team, datathon years and tracks, FAQs, and socials. Prefer changing that file over hardcoding strings in components. Images live in `public/` (team photos in `public/team/`).
+
+Workshop recordings also live in `src/data/site.ts`, in the `workshops` array. Add a title and YouTube video ID to list another recording. The workshops page reuses the site's navigation and footer; homepage section links return to the relevant homepage section. Vite builds both `index.html` and `workshops/index.html`, so the workshop URL can be loaded directly on static hosting.
 
 ## Deployment
 

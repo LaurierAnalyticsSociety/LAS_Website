@@ -2,15 +2,15 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { motion, AnimatePresence, useScroll, useSpring } from 'framer-motion';
 import { Menu, X, ArrowUpRight } from 'lucide-react';
 import { Logo } from './Logo';
-import { navLinks } from '../data/site';
+import { navLinks, siteHref } from '../data/site';
 import { useActiveSection } from '../hooks/useActiveSection';
 
-export function Nav() {
+export function Nav({ isHome = true }: { isHome?: boolean }) {
   const [scrolled, setScrolled] = useState(false);
   const [open, setOpen] = useState(false);
   const { scrollYProgress } = useScroll();
   const progress = useSpring(scrollYProgress, { stiffness: 120, damping: 30, mass: 0.3 });
-  const sectionIds = useMemo(() => navLinks.map((l) => l.href.slice(1)), []);
+  const sectionIds = useMemo(() => navLinks.filter((l) => l.href.startsWith('#')).map((l) => l.href.slice(1)), []);
   const active = useActiveSection(sectionIds);
 
   useEffect(() => {
@@ -44,21 +44,21 @@ export function Nav() {
         }>
         
         <nav aria-label="Primary" className="mx-auto flex h-16 max-w-[1400px] items-center justify-between px-5 sm:px-8">
-          <a href="#top" onClick={() => setOpen(false)} className="group flex items-center gap-3" aria-label="Laurier Analytics Society, back to top">
+          <a href={siteHref('#top', isHome)} onClick={() => setOpen(false)} className="group flex items-center gap-3" aria-label="Laurier Analytics Society, home">
             <Logo className="h-7 w-[63px]" interactive />
-            <span className="hidden whitespace-nowrap font-mono text-[11px] uppercase tracking-[0.16em] text-paper/55 transition-colors duration-300 group-hover:text-paper/80 sm:block">
+            <span className="hidden whitespace-nowrap font-mono text-[11px] uppercase tracking-[0.16em] text-paper/55 transition-colors duration-300 group-hover:text-paper/80 xl:block">
               Laurier Analytics Society
             </span>
           </a>
 
           <ul className="hidden items-center gap-1 md:flex">
             {navLinks.map((link) => {
-              const isActive = active === link.href.slice(1);
+              const isActive = isHome ? active === link.href.slice(1) : link.href === '/workshops/';
               return (
                 <li key={link.href}>
                   <a
-                    href={link.href}
-                    aria-current={isActive ? 'location' : undefined}
+                    href={siteHref(link.href, isHome)}
+                    aria-current={isActive ? (isHome ? 'location' : 'page') : undefined}
                     className={`group relative block px-3 py-2 font-mono text-[12px] uppercase tracking-[0.14em] transition-colors duration-300 ${
                     isActive ? 'text-cyan' : 'text-paper/55 hover:text-paper'}`
                     }>
@@ -76,7 +76,7 @@ export function Nav() {
           </ul>
 
           <div className="flex items-center gap-2">
-            <a href="#newsletter" className="btn-signal hidden h-10 px-5 text-[13px] sm:inline-flex" data-cursor="join">
+            <a href={siteHref('#newsletter', isHome)} className="btn-signal hidden h-10 px-5 text-[13px] sm:inline-flex" data-cursor="join">
               Join the society
               <ArrowUpRight className="h-3.5 w-3.5" />
             </a>
@@ -114,7 +114,8 @@ export function Nav() {
               transition={{ delay: 0.05 + i * 0.05, duration: 0.3 }}>
               
                   <a
-                href={link.href}
+                href={siteHref(link.href, isHome)}
+                aria-current={!isHome && link.href === '/workshops/' ? 'page' : undefined}
                 onClick={() => setOpen(false)}
                 className="flex min-h-12 items-center justify-between border-b border-paper/5 py-3 font-mono text-[13px] uppercase tracking-[0.14em] text-paper/80">
                 
@@ -125,7 +126,7 @@ export function Nav() {
             )}
               <li>
                 <a
-                href="#newsletter"
+                href={siteHref('#newsletter', isHome)}
                 onClick={() => setOpen(false)}
                 className="mt-3 flex min-h-12 items-center justify-between py-3 font-heading text-sm text-cyan">
                 
