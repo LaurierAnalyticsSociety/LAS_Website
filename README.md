@@ -77,6 +77,8 @@ Workshop recordings also live in `src/data/site.ts`, in the `workshops` array. A
 The production site is deployed to **Vercel** and served at
 **https://laurieranalytics.com**.
 
+Pushes and merges to `main` deploy automatically through Vercel’s GitHub integration. The Vercel GitHub app must be installed for `LaurierAnalyticsSociety` with access to `LAS_Website`, and the Vercel project must be connected to that repository with `main` as its production branch. Build and output settings are also declared in `vercel.json`.
+
 - Build command: `npm run build`
 - Output directory: `dist`
 - Environment variables: set `VITE_SUPABASE_URL` and
