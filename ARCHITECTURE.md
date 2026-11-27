@@ -2,53 +2,62 @@
 
 ## Overview
 
-This is a **static SPA** (Vite builds static assets) with one thin backend
-concern: newsletter and event-notification signups, handled by a Supabase
-Edge Function backed by Postgres. There is no other server, auth, or API
-layer in-repo.
+This is a **static SPA** (Vite builds static assets) deployed on **Vercel** at
+[laurieranalytics.com](https://laurieranalytics.com). Its only backend
+concerns are form submissions (newsletter / event-notification signups and
+sponsor inquiries) and newsletter unsubscribes, handled by Supabase Edge Functions backed by Postgres.
+There is no other server, auth, or API layer in-repo.
 
 ```
 Browser → index.html → src/index.tsx → App → section components
                               ↑
                      src/data/site.ts (content)
 
-Signup forms → src/utils/supabase.ts → Supabase Edge Function `subscribe`
-                                    → Postgres + Resend email
+Signup form  → src/utils/supabase.ts → Edge Function `subscribe`       → Postgres + Resend
+Sponsor form → src/utils/supabase.ts → Edge Function `sponsor-inquiry` → Postgres + Resend
+Email link   → Edge Function `unsubscribe` (confirm page, writes on POST) → Postgres
 ```
 
 ## Runtime flow
 
-1. `index.html` mounts `#root` and loads `src/index.tsx`.
+1. `index.html` mounts `#root`, carries static SEO metadata (canonical, Open Graph, Twitter, Organization / WebSite JSON-LD), and loads `src/index.tsx`.
 2. `index.tsx` creates a React 18 root and renders `<App />`.
-3. `App` enables dark mode, then stacks section components in order:
-   - `Nav` → `Hero` → `About` → `Stats` → `Impact` → `Initiatives` → `Team` → `Datathon` → `Sponsors` (optional) → `Faq` → `Newsletter` → `Footer`
-4. Sections pull structured data from `src/data/site.ts` and use shared UI (`Reveal`, `SectionHeading`, `AsciiField`, accordion).
+3. `App` enables dark mode, sets the document title, injects FAQ JSON-LD from `faqs`, shows the `Preloader` (unless disabled or reduced motion), and renders inside `SmoothScroll` (Lenis):
+   - `Nav` → `Hero` → `About` → `Datathon` → `Team` → `Faq` → `Newsletter` → `Sponsors` → `Footer`
+4. Sections pull structured data from `src/data/site.ts` and use shared UI (`Reveal`, `WordReveal`, `SectionHeading`, `AsciiField`, accordion).
 
 ## Key modules
 
 | Path | Role |
 |------|------|
-| `src/App.tsx` | Page shell, density props, section order |
+| `src/App.tsx` | Page shell, props (`asciiDensity`, `showIntro`, `customCursor`), section order, FAQ JSON-LD |
 | `src/data/site.ts` | Single source of truth for marketing content |
-| `src/components/AsciiField.tsx` | ASCII / matrix-style visual field used in hero & datathon |
-| `src/components/Reveal.tsx` | Scroll / motion reveal wrapper |
-| `src/hooks/useCountUp.ts` | Animated number counters for stats |
+| `src/components/AsciiField.tsx` | ASCII / matrix-style visual field (uses `src/utils/heatmap.ts`) |
+| `src/components/Preloader.tsx` | Intro animation shown before the hero |
+| `src/components/SmoothScroll.tsx` | Lenis smooth-scroll wrapper |
+| `src/components/CustomCursor.tsx` | Custom pointer (driven by `useCursorState`) |
+| `src/components/Reveal.tsx`, `WordReveal.tsx` | Scroll / motion reveal wrappers |
 | `src/components/ui/Accordion.tsx` | FAQ accordion primitive |
 | `src/components/Newsletter.tsx` | Newsletter section; submits via `subscribe()` |
-| `src/utils/supabase.ts` | Supabase client + `subscribe()` helper (calls the Edge Function) |
-| `supabase/functions/subscribe/index.ts` | Edge Function: validates, stores signup, sends Resend email |
+| `src/components/Sponsors.tsx` | Sponsors section + partnership inquiry form; submits via `submitSponsorInquiry()` |
+| `src/hooks/` | `useActiveSection`, `useCursorState`, `useTypewriter`, `usePrefersReducedMotion`, `useCountUp` |
+| `src/utils/supabase.ts` | Supabase client + `subscribe()` / `submitSponsorInquiry()` helpers |
+| `supabase/functions/subscribe/index.ts` | Edge Function: validates, stores signup, sends welcome email |
+| `supabase/functions/sponsor-inquiry/index.ts` | Edge Function: validates, stores inquiry, emails the team |
+| `supabase/functions/unsubscribe/index.ts` | Edge Function: confirm page on GET, unsubscribes on POST (incl. RFC 8058 one-click) |
+| `supabase/config.toml` | Turns off gateway JWT verification for the three functions |
+| `supabase/migrations/` | Schema for all backend tables |
+| `public/` | Images, favicon, `robots.txt`, `sitemap.xml`, `site.webmanifest` |
 | `src/_designSystem/` | Bundled design-system assets from the template (styles / library) |
 
-## Signup backend
+## Backend
 
-The Newsletter form (and future event-notification forms) post to a single
-Supabase Edge Function rather than writing to the database directly. This
-keeps the service-role key and the Resend key server-side.
+Forms post to Supabase Edge Functions rather than writing to the database
+directly. This keeps the service-role key and the Resend key server-side.
 
-**Flow**
+**Signups (`subscribe`)**
 
-1. `subscribe()` in `src/utils/supabase.ts` calls the `subscribe` Edge Function
-   with `{ email, type, event_key?, source? }`.
+1. `subscribe()` calls the function with `{ email, type, event_key?, source? }`.
 2. The function validates the email, then inserts into `newsletter_subscribers`
    (type `newsletter`) or `event_notifications` (type `event`) using the
    service-role client, which bypasses RLS. Duplicate signups are treated as
@@ -65,24 +74,37 @@ keeps the service-role key and the Resend key server-side.
    gets the "unsubscribed" page. A later signup with the same email
    reactivates the row.
 
-**Data model** (RLS enabled; the public `anon`/publishable key may only
-INSERT, never SELECT — emails are never readable through the Data API):
+**Sponsor inquiries (`sponsor-inquiry`)**
+
+1. `submitSponsorInquiry()` calls the function with
+   `{ company, contact_name, email, message?, source? }`.
+2. The function validates input, inserts into `sponsor_inquiries`, and emails
+   the inquiry to `SPONSOR_NOTIFY_TO` via Resend.
+3. Response: `{ ok, stored, email_sent }`.
+
+In both cases **the DB write is authoritative**: a failed email send does not
+fail the request.
+
+**Data model** (RLS enabled with no public policies; the browser can neither
+read nor write these tables directly, so emails are never exposed via the Data
+API):
 
 | Table | Columns |
 |-------|---------|
-| `newsletter_subscribers` | `id`, `email` (unique, case-insensitive), `status`, `source`, `unsubscribe_token`, `created_at`, `confirmed_at`, `unsubscribed_at` |
-| `event_notifications` | `id`, `email`, `event_key`, `source`, `created_at` — unique per `(email, event_key)` |
+| `newsletter_subscribers` | `id`, `email` (unique, case-insensitive), `status`, `source`, `unsubscribe_token` (unique), `created_at`, `confirmed_at`, `unsubscribed_at` |
+| `event_notifications` | `id`, `email`, `event_key`, `source`, `created_at`, unique per `(lower(email), event_key)` |
+| `sponsor_inquiries` | `id`, `company`, `contact_name`, `email`, `message`, `source`, `status` (`new` / `contacted` / `archived`), `created_at` |
 
 **Secrets:** the runtime injects `SUPABASE_URL` and
-`SUPABASE_SERVICE_ROLE_KEY`; `RESEND_API_KEY` is a function secret. The
-browser only ever sees the `VITE_` publishable values. See the README for
-the full env-var table and deploy commands.
+`SUPABASE_SERVICE_ROLE_KEY`; `RESEND_API_KEY`, `RESEND_FROM`,
+`SPONSOR_NOTIFY_TO` and the optional `SITE_URL` are function secrets. The browser only ever sees the `VITE_` publishable values.
+See the README for the full env-var table and deploy commands.
 
 ## Styling
 
 - Tailwind utility classes in components; theme extensions in `tailwind.config.js`.
 - Global tokens and base styles in `src/index.css`.
-- Design-system CSS under `src/_designSystem/` may be imported by template tooling — treat as generated unless you intentionally customize it.
+- Design-system CSS under `src/_designSystem/` may be imported by template tooling; treat as generated unless you intentionally customize it.
 
 ## Content vs presentation
 
@@ -93,7 +115,9 @@ the full env-var table and deploy commands.
 ## Build & deploy
 
 - `npm run build` outputs to `dist/`.
-- Suitable for static hosts (GitHub Pages, Vercel, Netlify, Cloudflare Pages). Set the host’s publish directory to `dist` and build command to `npm run build`.
+- **Frontend:** hosted on Vercel, served at `https://laurieranalytics.com` (`www` redirects to the apex). Build command `npm run build`, output directory `dist`. `VITE_SUPABASE_URL` and `VITE_SUPABASE_PUBLISHABLE_KEY` must be set in the Vercel project's environment variables.
+- **Backend:** Edge Functions and migrations are deployed to Supabase with the Supabase CLI, independently of Vercel.
+- Canonical, Open Graph, and JSON-LD URLs in `index.html`, plus `public/robots.txt` and `public/sitemap.xml`, must point at the production domain.
 
 ## Out of scope (current)
 

@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://laurieranalytics.ca/sitemap.xml
+Sitemap: https://laurieranalytics.com/sitemap.xml
