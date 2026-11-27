@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import { Database, KeyRound, Users } from 'lucide-react';
+import { Database, Github, KeyRound, Linkedin, Users } from 'lucide-react';
 import { SectionHeading } from './SectionHeading';
 import { team } from '../data/site';
 
@@ -42,14 +42,14 @@ export function Team() {
             </div>
           </div>
 
-          <div className="grid gap-px bg-cyan/15 min-[380px]:grid-cols-2 lg:grid-cols-3">
+          <div className="grid gap-px bg-cyan/15 min-[380px]:grid-cols-2 md:grid-cols-4 lg:grid-cols-5">
             {team.map((member, i) => (
               <motion.article
                 key={member.name}
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true, margin: '-40px' }}
-                transition={{ duration: 0.5, delay: i % 3 * 0.06 }}
+                transition={{ duration: 0.5, delay: i % 5 * 0.06 }}
                 className="group relative min-w-0 bg-panel transition-colors duration-300 hover:bg-lift"
               >
                 <div className="flex items-center justify-between border-b border-paper/10 px-4 py-3 font-mono text-[10px] sm:px-5">
@@ -60,7 +60,7 @@ export function Team() {
                   <span aria-hidden="true" className="text-paper/30">{String(i + 1).padStart(2, '0')} / {String(team.length).padStart(2, '0')}</span>
                 </div>
 
-                <div className="p-3 sm:p-5">
+                <div className="p-3 sm:p-4">
                   <div className="relative aspect-square overflow-hidden border border-paper/10 bg-ink">
                     <img
                       src={member.image}
@@ -76,14 +76,38 @@ export function Team() {
                     <span aria-hidden="true" className="pointer-events-none absolute bottom-0 right-0 h-4 w-4 border-b border-r border-cyan" />
                   </div>
 
-                  <div className="mt-5">
+                  <div className="mt-4">
                     <span className="font-mono text-[9px] uppercase tracking-[0.2em] text-paper/40">name</span>
-                    <h3 className="mt-1 font-heading text-lg font-medium leading-tight tracking-tight text-paper sm:text-2xl">{member.name}</h3>
+                    <h3 className="mt-1 font-heading text-lg font-medium leading-tight tracking-tight text-paper sm:text-xl">{member.name}</h3>
                   </div>
                   <dl className="mt-4 border-t border-paper/10 pt-3">
                     <dt className="font-mono text-[9px] uppercase tracking-[0.2em] text-paper/40">role</dt>
                     <dd className="mt-1.5 break-words font-mono text-[11px] leading-relaxed text-cyan sm:text-xs">{member.role}</dd>
                   </dl>
+                  {member.linkedin || member.github ? (
+                    <div className="mt-3 flex items-center gap-1">
+                      {member.linkedin ? (
+                        <a
+                          href={member.linkedin}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          aria-label={`${member.name} on LinkedIn`}
+                          className="grid h-9 w-9 place-items-center border border-paper/10 text-paper/55 transition-colors duration-300 hover:border-cyan/40 hover:text-cyan">
+                          <Linkedin className="h-3.5 w-3.5" />
+                        </a>
+                      ) : null}
+                      {member.github ? (
+                        <a
+                          href={member.github}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          aria-label={`${member.name} on GitHub`}
+                          className="grid h-9 w-9 place-items-center border border-paper/10 text-paper/55 transition-colors duration-300 hover:border-cyan/40 hover:text-cyan">
+                          <Github className="h-3.5 w-3.5" />
+                        </a>
+                      ) : null}
+                    </div>
+                  ) : null}
                 </div>
               </motion.article>
             ))}

@@ -68,7 +68,7 @@ The newsletter and sponsor forms call Supabase Edge Functions, so the two
 
 ## Editing content
 
-Almost all site copy lives in **`src/data/site.ts`**: nav links, about text, team, datathon years and tracks, FAQs, and socials. Prefer changing that file over hardcoding strings in components. Images live in `public/` (team photos in `public/team/`).
+Almost all site copy lives in **`src/data/site.ts`**: nav links, about text, team, datathon years and tracks, FAQs, and socials. Prefer changing that file over hardcoding strings in components. Images live in `public/`. Team headshots go in `public/team/` as square `firstname-lastname.jpg` files (800×800); each `team` entry in `site.ts` has a `linkedin` field and an optional `github` field (leave it out if the person has none); icons only appear when a URL is set.
 
 Workshop recordings also live in `src/data/site.ts`, in the `workshops` array. Add a title and YouTube video ID to list another recording. The workshops page reuses the site's navigation and footer; homepage section links return to the relevant homepage section. Vite builds both `index.html` and `workshops/index.html`, so the workshop URL can be loaded directly on static hosting.
 
