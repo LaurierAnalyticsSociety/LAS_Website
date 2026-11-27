@@ -1,4 +1,4 @@
-import { createClient } from '@supabase/supabase-js';
+import { createClient, FunctionsFetchError, FunctionsRelayError } from '@supabase/supabase-js';
 
 const url = import.meta.env.VITE_SUPABASE_URL as string | undefined;
 const publishableKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY as string | undefined;
@@ -17,6 +17,29 @@ export const supabase =
   url && publishableKey
     ? createClient(url, publishableKey, { auth: { persistSession: false } })
     : null;
+
+/**
+ * Turns a functions.invoke error into a message for the user. Non-2xx
+ * responses carry our function's own `{ error }` body; fetch/relay errors mean
+ * the backend couldn't be reached at all (e.g. DNS failure, function not
+ * deployed).
+ */
+async function invokeErrorMessage(error: unknown, unreachableMessage: string): Promise<string> {
+  if (error instanceof FunctionsFetchError || error instanceof FunctionsRelayError) {
+    console.error('[supabase] Edge Function unreachable:', error);
+    return unreachableMessage;
+  }
+  const ctx = (error as { context?: Response }).context;
+  if (ctx && typeof ctx.json === 'function') {
+    try {
+      const payload = (await ctx.json()) as { error?: string };
+      if (payload?.error) return payload.error;
+    } catch {
+      // ignore parse errors, keep default message
+    }
+  }
+  return 'Something went wrong. Please try again.';
+}
 
 export type SignupType = 'newsletter' | 'event';
 
@@ -56,18 +79,10 @@ export async function subscribe(params: {
   });
 
   if (error) {
-    // functions.invoke surfaces non-2xx as FunctionsHttpError; try to read the body.
-    let message = 'Something went wrong. Please try again.';
-    const ctx = (error as { context?: Response }).context;
-    if (ctx && typeof ctx.json === 'function') {
-      try {
-        const payload = (await ctx.json()) as SubscribeResult;
-        if (payload?.error) message = payload.error;
-      } catch {
-        // ignore parse errors, keep default message
-      }
-    }
-    return { ok: false, error: message };
+    return {
+      ok: false,
+      error: await invokeErrorMessage(error, 'Signups are temporarily unavailable. Please try again later.'),
+    };
   }
 
   return data ?? { ok: false, error: 'Empty response from server.' };
@@ -110,17 +125,13 @@ export async function submitSponsorInquiry(params: {
   });
 
   if (error) {
-    let message = 'Something went wrong. Please try again.';
-    const ctx = (error as { context?: Response }).context;
-    if (ctx && typeof ctx.json === 'function') {
-      try {
-        const payload = (await ctx.json()) as SponsorInquiryResult;
-        if (payload?.error) message = payload.error;
-      } catch {
-        // ignore parse errors, keep default message
-      }
-    }
-    return { ok: false, error: message };
+    return {
+      ok: false,
+      error: await invokeErrorMessage(
+        error,
+        "We couldn't send your inquiry right now. Please email laurieranalytics@gmail.com directly.",
+      ),
+    };
   }
 
   return data ?? { ok: false, error: 'Empty response from server.' };

@@ -18,7 +18,8 @@ const RESEND_API_KEY = Deno.env.get('RESEND_API_KEY');
 // this must be the Resend account owner's email to actually deliver.
 const NOTIFY_TO = Deno.env.get('SPONSOR_NOTIFY_TO');
 
-const FROM_ADDRESS = 'Laurier Analytics <onboarding@resend.dev>';
+// Same sender as the subscribe function; see RESEND_FROM there.
+const FROM_ADDRESS = Deno.env.get('RESEND_FROM') ?? 'Laurier Analytics <onboarding@resend.dev>';
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 

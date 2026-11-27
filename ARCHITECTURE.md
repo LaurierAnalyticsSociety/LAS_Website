@@ -55,6 +55,15 @@ keeps the service-role key and the Resend key server-side.
    success (`already_subscribed`), not an error.
 3. On a genuinely new signup it sends a welcome email via Resend. **The DB
    write is authoritative** — a failed email send does not fail the request.
+   The response's `email_sent` flag tells the UI whether to say a
+   confirmation went out.
+4. Newsletter emails link to the `unsubscribe` function. GET is read-only:
+   it validates the token (a UUID) and renders a confirm page whose form
+   POSTs back to the same URL, so link-scanning bots can't unsubscribe
+   anyone. POST sets `status = 'unsubscribed'`; a `List-Unsubscribe=One-Click`
+   body (RFC 8058, from the mail client) gets an empty 200, the browser form
+   gets the "unsubscribed" page. A later signup with the same email
+   reactivates the row.
 
 **Data model** (RLS enabled; the public `anon`/publishable key may only
 INSERT, never SELECT — emails are never readable through the Data API):
@@ -90,7 +99,5 @@ the full env-var table and deploy commands.
 
 - Auth, CMS, or CMS-driven content
 - Server-side rendering
-- Double opt-in / one-click unsubscribe flow (the `status` and
-  `unsubscribe_token` columns exist for this but aren't wired yet)
+- Double opt-in (`confirmed_at` exists but isn't used yet)
 - Sending newsletter broadcasts (only welcome emails are sent so far)
-- A verified Resend sending domain (uses `onboarding@resend.dev` for now)
